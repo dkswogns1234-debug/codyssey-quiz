@@ -3,7 +3,8 @@
 import random
 
 from default_quizzes import get_default_quizzes
-from input_utils import read_number
+from input_utils import read_number, read_text
+from quiz import Quiz
 
 LINE = "=" * 40
 
@@ -42,6 +43,8 @@ class QuizGame:
         """선택한 번호에 맞는 기능을 실행한다."""
         if choice == 1:
             self.play_quiz()
+        elif choice == 2:
+            self.add_quiz()
         else:
             print(f"\n🚧 '{self.MENU_ITEMS[choice - 1]}' 기능은 준비 중입니다.\n")
 
@@ -68,6 +71,16 @@ class QuizGame:
                 print(f"❌ 오답입니다. 정답은 {quiz.answer_text()}입니다.\n")
 
         self.show_result(correct, total)
+
+    def add_quiz(self):
+        """문제, 선택지 4개, 정답 번호를 입력받아 새 퀴즈를 등록한다."""
+        print("\n📌 새로운 퀴즈를 추가합니다.\n")
+        question = read_text("문제를 입력하세요: ")
+        choices = [read_text(f"선택지 {index}: ") for index in range(1, Quiz.CHOICE_COUNT + 1)]
+        answer = read_number(f"정답 번호 (1-{Quiz.CHOICE_COUNT}): ", 1, Quiz.CHOICE_COUNT)
+
+        self.quizzes.append(Quiz(question, choices, answer))
+        print("\n✅ 퀴즈가 추가되었습니다!\n")
 
     def show_result(self, correct, total):
         """맞힌 개수와 100점 만점 점수를 출력하고 점수를 반환한다."""
