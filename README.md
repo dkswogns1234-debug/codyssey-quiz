@@ -111,3 +111,8 @@ codyssey-quiz/
 | ![메뉴](docs/screenshots/menu.png) | ![퀴즈 풀기](docs/screenshots/play.png) |
 | **퀴즈 추가** | **점수 확인** |
 | ![퀴즈 추가](docs/screenshots/add_quiz.png) | ![점수 확인](docs/screenshots/score.png) |
+
+## 8. Git 복제 실습 기록
+
+- 이 문단은 `git clone`으로 만든 별도 폴더(`codyssey-quiz-clone`)에서 추가하고 push한 뒤,
+  원래 작업 폴더에서 `git pull`로 받아 온 내용입니다.
