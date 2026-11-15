@@ -114,6 +114,11 @@ class QuizGame:
                 raise ValueError("best_correct, best_total은 0 이상의 정수여야 합니다.")
             if best_correct > best_total:
                 raise ValueError("맞힌 문제 수(best_correct)가 푼 문제 수(best_total)보다 많습니다.")
+            # 세 값이 서로 맞는지 검사: 안 풀었으면 null/0/0, 풀었으면 점수 = 맞힌 수 / 푼 수 × 100
+            if best is None and (best_correct, best_total) != (0, 0):
+                raise ValueError("최고 점수가 없는데 정답 기록이 남아 있습니다.")
+            if best is not None and (best_total == 0 or best != round(best_correct / best_total * 100)):
+                raise ValueError("최고 점수가 맞힌 수/푼 수와 맞지 않습니다.")
         except OSError as error:
             # 권한 문제 등으로 '읽기'에 실패한 것은 손상이 아니므로 원본 파일을 건드리지 않는다.
             print(f"⚠️ 저장 파일을 열 수 없습니다. ({error})")
