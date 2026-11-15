@@ -1,4 +1,4 @@
-$ python -m unittest discover -s tests -v   (Python 3.14.10, 2026-11-15 18:28, Windows 11)
+$ python -m unittest discover -s tests -v   (Python 3.14.10, 2026-11-15 18:59, Windows 11)
 test_read_number_retries_until_valid (test_quiz_game.TestInputUtils.test_read_number_retries_until_valid) ... ok
 test_read_text_rejects_blank (test_quiz_game.TestInputUtils.test_read_text_rejects_blank) ... ok
 test_eof_exits_safely (test_quiz_game.TestMainIntegration.test_eof_exits_safely) ... ok
@@ -6,18 +6,24 @@ test_full_menu_flow_and_persistence (test_quiz_game.TestMainIntegration.test_ful
 test_dict_round_trip (test_quiz_game.TestQuiz.test_dict_round_trip) ... ok
 test_invalid_quiz_is_rejected (test_quiz_game.TestQuiz.test_invalid_quiz_is_rejected) ... ok
 test_valid_quiz_and_grading (test_quiz_game.TestQuiz.test_valid_quiz_and_grading) ... ok
+test_benchmark_numbers_match_raw_output (test_quiz_game.TestReadmeMatchesCode.test_benchmark_numbers_match_raw_output)
+README 10장 성능 표·감소율과 quiz_game.py 주석이 측정 원본(tools/benchmark_result.txt)과 같은지. ... ok
 test_default_quiz_count_in_readme (test_quiz_game.TestReadmeMatchesCode.test_default_quiz_count_in_readme) ... ok
 test_repository_state_json_is_valid_initial_state (test_quiz_game.TestReadmeMatchesCode.test_repository_state_json_is_valid_initial_state) ... ok
+test_test_count_in_readme (test_quiz_game.TestReadmeMatchesCode.test_test_count_in_readme)
+README에 적힌 자동 테스트 개수가 실제 테스트 개수와 같은지. ... ok
 test_invalid_records (test_quiz_game.TestScoreRule.test_invalid_records) ... ok
 test_valid_records (test_quiz_game.TestScoreRule.test_valid_records) ... ok
 test_broken_file_is_backed_up_and_reset (test_quiz_game.TestStateFile.test_broken_file_is_backed_up_and_reset) ... ok
 test_inconsistent_score_is_not_saved (test_quiz_game.TestStateFile.test_inconsistent_score_is_not_saved) ... ok
 test_missing_file_starts_with_defaults_and_creates_file (test_quiz_game.TestStateFile.test_missing_file_starts_with_defaults_and_creates_file) ... ok
 test_permission_error_keeps_original_and_disables_saving (test_quiz_game.TestStateFile.test_permission_error_keeps_original_and_disables_saving) ... ok
+test_recursion_error_is_treated_as_broken (test_quiz_game.TestStateFile.test_recursion_error_is_treated_as_broken) ... ok
+test_save_uses_process_unique_temp_file_and_leaves_none (test_quiz_game.TestStateFile.test_save_uses_process_unique_temp_file_and_leaves_none) ... ok
 test_saved_quiz_and_score_survive_restart (test_quiz_game.TestStateFile.test_saved_quiz_and_score_survive_restart) ... ok
 test_utf8_without_escaping (test_quiz_game.TestStateFile.test_utf8_without_escaping) ... ok
 
 ----------------------------------------------------------------------
-Ran 17 tests in 0.409s
+Ran 21 tests in 0.414s
 
 OK
