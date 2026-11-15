@@ -138,7 +138,7 @@ codyssey-quiz/
 | 1 | 첫 실행 → `abc`, `9`, 빈 Enter 입력 → 퀴즈 추가 → 종료 | `📂 저장된 데이터가 없어 기본 퀴즈 8개로 시작합니다.`, `⚠️ 잘못된 입력입니다...`, `✅ 퀴즈가 추가되었습니다! (state.json에 저장됨)` |
 | 2 | 재시작 → 목록 → 1문제 풀기 → 점수 확인 | `📂 저장된 데이터를 불러왔습니다. (퀴즈 9개, ...)`, `[9] 영화 기생충의 감독은?` |
 | 3 | 다시 재시작 → 점수 확인 | `(퀴즈 9개, 최고점수 0점)` → 실행 2에서 무작위로 나온 1문제를 틀려 기록된 0점(1문제 중 0문제)이 그대로 유지됨. 0점은 '기록 없음'(`null`)과 다른, 실제로 저장된 값 |
-| 4 | 손상된 `state.json`으로 시작 | `🗂️ 손상된 파일은 state.json.bak(으)로 백업했습니다.`, `🔧 기본 퀴즈 8개로 복구했습니다.` |
+| 4 | 손상된 `state.json`으로 시작 | `⚠️ 저장 파일이 손상되어 읽을 수 없습니다. (...)` → `🗂️ 손상된 파일은 state.json.bak(으)로 백업했습니다.` → `🔧 기본 퀴즈 8개로 복구했습니다.` |
 
 ## 8. Git 작업 기록
 
@@ -146,7 +146,7 @@ codyssey-quiz/
 
 형식: `태그: 무엇을 했는지 한 줄 요약` + (필요하면) 빈 줄 뒤에 `- 변경 내용` 목록
 
-커밋 템플릿 파일: [`.gitmessage`](.gitmessage) — `git config commit.template .gitmessage`로 등록하면 `git commit` 때 이 틀이 자동으로 열립니다. (이 저장소에 등록해 사용 중)
+커밋 템플릿 파일: [`.gitmessage`](.gitmessage) — `git config commit.template .gitmessage`로 등록하면 `git commit` 때 이 틀이 자동으로 열립니다. 원래 작업 폴더에서 이 설정을 등록해 사용했습니다([`dev_env.png`](docs/screenshots/dev_env.png)의 `git config commit.template` 출력). `git config` 설정은 clone으로 함께 복사되지 않으므로, clone한 뒤에는 위 명령을 한 번 실행해야 합니다.
 
 | 태그 | 언제 쓰나 | 이 저장소의 예 |
 |---|---|---|
@@ -248,7 +248,7 @@ c461fdf HEAD@{2026-11-15 17:27:46 +0900}: clone: from https://github.com/dkswogn
 | `push` | `main`, `feature/play-quiz` 브랜치를 GitHub에 업로드, 복제 폴더에서 실습 커밋 push |
 | `checkout` | `checkout -b feature/play-quiz`, `checkout main` (8-3) |
 | `clone` | 복제 폴더 2개 생성: `codyssey-quiz-clone`, `codyssey-quiz-clone2` (8-4) |
-| `pull` | 원래 폴더에서 실습 커밋 2번 받아오기: `f11df13`, `8648c21` (8-3, 8-4) |
+| `pull` | 원래 폴더에서 실습 커밋 2번 받아오기: `f11df13`, `8648c21`. 두 번 모두 [`docs/git_log.txt`](docs/git_log.txt)의 원래 폴더 reflog에 `pull: Fast-forward`로 남아 있음 (8-3, 8-4, `clone_pull.png`) |
 
 ## 9. 설계: 역할 분리와 호출 흐름
 
@@ -258,7 +258,7 @@ c461fdf HEAD@{2026-11-15 17:27:46 +0900}: clone: from https://github.com/dkswogn
 | 퀴즈 한 문제 (데이터 모델) | `Quiz` (`quiz.py`) | `display`, `is_correct`, `answer_text`, `to_dict`, `from_dict` |
 | 게임 진행 | `QuizGame` (`quiz_game.py`) | `run`, `show_menu`, `handle_choice`, `play_quiz`, `add_quiz`, `list_quizzes`, `show_best_score` |
 | 점수 계산 | `QuizGame` | `show_result`, `score_comment`, `update_best_score` |
-| 저장/불러오기 | `QuizGame` | `load_state`, `save_state`, `backup_broken_file`, `reset_to_default` |
+| 저장/불러오기 | `QuizGame` | `load_state`, `save_state`, `check_score_record`, `backup_broken_file`, `reset_to_default` |
 
 **호출 흐름 (입력 → 검증 → 처리 → 저장)**: `main()` → `QuizGame.run()` → `load_state()` → [반복] `show_menu()` → `read_number()`로 검증된 번호 받기 → `handle_choice()` → 기능 실행(예: `add_quiz()` → `Quiz(...)` 생성 시 값 검사) → `save_state()` → 종료 시 `quit()` → `save_state()`
 
@@ -269,7 +269,7 @@ flowchart TD
     A["main.py: main()"] --> B["QuizGame.run()"]
     B --> C["load_state(): state.json 읽기"]
     C -->|파일 없음| D["기본 퀴즈 8개 → save_state()"]
-    C -->|손상| E["backup_broken_file() → 기본 퀴즈 → save_state()"]
+    C -->|손상| E["reset_to_default() → backup_broken_file() 성공 시 save_state()"]
     C -->|정상| F["show_menu()"]
     D --> F
     E --> F
@@ -288,11 +288,11 @@ flowchart TD
 
 | 바뀌는 요구 | 수정할 곳 |
 |---|---|
-| 점수 계산 방식(가중치, 힌트 감점 등) | `QuizGame.show_result`, `update_best_score` |
+| 점수 계산 방식(가중치, 힌트 감점 등) | `QuizGame.show_result`(점수 계산), `check_score_record`(불러오기·저장 때 점수 검증 규칙), `update_best_score`, 그리고 기존 `state.json`의 점수 기록 변환(또는 초기화). 검증 규칙을 함께 바꾸지 않으면 새 방식으로 저장한 기록이 다음 실행에서 손상으로 처리됨 |
 | 선택지 개수 변경(4개 → 5개) | `Quiz.CHOICE_COUNT` + `default_quizzes.py`의 기본 퀴즈 8개에 선택지 추가 + 기존 `state.json` 변환(또는 삭제) + `quiz.py` 오류 메시지의 '4개', '1~4' 문구. 입력 범위(`read_number`)와 선택지 입력 반복은 상수를 따라가므로 수정 불필요 |
 | 퀴즈에 항목 추가(예: 힌트) | `Quiz.__init__`, `to_dict`, `from_dict`, `QuizGame.add_quiz` |
 | 저장 형식·위치 변경 | `QuizGame.load_state`, `save_state`, `STATE_FILE` |
-| 메뉴 추가 | `QuizGame.MENU`에 (이름, 메서드명) 한 줄 + 메서드 작성 |
+| 메뉴 추가 | `QuizGame.MENU`의 **'종료' 항목 바로 앞**에 (이름, 메서드명) 한 줄 + 메서드 작성. 종료 번호가 하나 밀리므로(5 → 6) README의 메뉴 설명과 실행 확인용 입력도 함께 수정 |
 
 `Quiz`는 화면 출력(`display`)만 빼면 입출력에 의존하지 않아서, 다른 프로그램(예: 웹 퀴즈)에서도 `from_dict`/`to_dict`로 같은 `state.json` 데이터를 그대로 재사용할 수 있습니다.
 
@@ -300,7 +300,7 @@ flowchart TD
 
 측정 스크립트: [`tools/benchmark.py`](tools/benchmark.py) (`python tools/benchmark.py`로 누구나 재현 가능, 실제 `state.json`은 건드리지 않음)
 
-측정 환경: Windows 11, Python 3.14.10, 각 항목 5회 실행 중 가장 빠른 값
+측정 환경: Windows 11, Python 3.14.10([`dev_env.png`](docs/screenshots/dev_env.png)의 `python --version` 출력과 같은 인터프리터), 각 항목 5회 실행 중 가장 빠른 값
 
 | 퀴즈 수 | 파일 크기 | 저장 | 불러오기 | 무작위 10문제 출제 | 목록 출력(화면 표시 제외) | 불러오기 중 최대 메모리 | 불러온 뒤 메모리 |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -342,6 +342,7 @@ flowchart TD
 | `state.json` 없음 | 기본 퀴즈 8개로 새로 만듦 | 없음 |
 | `state.json` 손상 (JSON 문법·값 오류) | `state.json.bak`으로 옮기고 기본 퀴즈로 복구 | 이전 내용이 필요하면 `state.json.bak`을 열어 직접 옮겨 적기 |
 | 손상 + 백업 실패 | 원본을 지키려고 이번 실행은 저장 안 함(🔒 안내) | 폴더 쓰기 권한 확인 후 다시 실행 |
+| 점수 갱신 도중 강제 중단 등으로 점수 세 값이 어긋남 | 저장 직전 `check_score_record` 검사에서 걸러 저장하지 않음(⚠️ 안내), 기존 파일 유지 | 다시 실행해 퀴즈를 풀면 정상 기록됨 |
 | 파일을 열 수 없음 (권한) | 읽기 전용 모드(🔒 안내), 원본 그대로 | 파일 속성에서 '읽기 전용' 해제, 다른 프로그램이 파일을 열고 있으면 닫은 뒤 다시 실행 |
 | 저장 실패 (디스크 가득 등) | `⚠️ 데이터를 저장하지 못했습니다` 안내, 기존 파일 유지 | 공간 확보 후 다시 저장되는 동작(추가·종료) 실행 |
 
