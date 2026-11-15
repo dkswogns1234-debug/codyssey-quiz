@@ -1,4 +1,11 @@
-"""state.json이 없거나 손상됐을 때 사용하는 기본 퀴즈 데이터 (주제: 파이썬·프로그래밍 상식)."""
+"""state.json이 없거나 손상됐을 때 사용하는 기본 퀴즈 데이터 (주제: 파이썬·프로그래밍 상식).
+
+기본 퀴즈를 바꾸는 방법:
+1. 아래 목록에 Quiz("문제", ["보기1", "보기2", "보기3", "보기4"], 정답번호) 한 줄을 추가/수정한다.
+   (값이 잘못되면 Quiz가 만들어질 때 ValueError가 나서 바로 알 수 있다.)
+2. 이미 state.json이 있으면 그 파일이 우선이므로, 새 기본 퀴즈를 보려면 state.json을 지우고 실행한다.
+3. 확인: python -c "from default_quizzes import get_default_quizzes; print(len(get_default_quizzes()))"
+"""
 
 from quiz import Quiz
 
