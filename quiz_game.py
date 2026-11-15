@@ -124,7 +124,7 @@ class QuizGame:
         temp_file = self.state_file.with_name(self.state_file.name + ".tmp")
         try:
             # 임시 파일에 다 쓴 뒤 바꿔치기해서, 저장 도중 꺼져도 원래 파일이 깨지지 않게 한다.
-            with open(temp_file, "w", encoding="utf-8") as file:
+            with open(temp_file, "w", encoding="utf-8", newline="\n") as file:
                 json.dump(data, file, ensure_ascii=False, indent=2)
             os.replace(temp_file, self.state_file)
             return True
