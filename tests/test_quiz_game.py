@@ -9,6 +9,7 @@
 import contextlib
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -169,6 +170,31 @@ class TestStateFile(unittest.TestCase):
         self.assertIn("저장하지 않았습니다", out)
         self.assertEqual(self.state.read_bytes(), before)
 
+    def test_recursion_error_is_treated_as_broken(self):
+        self.new_game()
+        # 아주 깊게 중첩된 JSON을 읽을 때 생길 수 있는 RecursionError도 '손상'으로 처리되는지 확인
+        with mock.patch.object(quiz_game.json, "load", side_effect=RecursionError("너무 깊은 중첩")):
+            game = QuizGame(self.state)
+            _, out = quiet(game.load_state)
+        self.assertIn("손상되어", out)
+        self.assertTrue((self.folder / "state.json.bak").exists())
+        self.assertEqual(len(game.quizzes), len(get_default_quizzes()))
+
+    def test_save_uses_process_unique_temp_file_and_leaves_none(self):
+        game = self.new_game()
+        used = []
+        real_replace = quiz_game.os.replace
+
+        def spy(src, dst):
+            used.append(Path(src).name)
+            return real_replace(src, dst)
+
+        with mock.patch.object(quiz_game.os, "replace", spy):
+            saved, _ = quiet(game.save_state)
+        self.assertTrue(saved)
+        self.assertEqual(used, [f"state.json.{os.getpid()}.tmp"])   # 프로세스마다 다른 임시 파일
+        self.assertEqual(list(self.folder.glob("*.tmp")), [])          # 저장 후 임시 파일이 남지 않음
+
 
 class TestReadmeMatchesCode(unittest.TestCase):
     """README에 적힌 숫자가 실제 코드와 같은지 확인 (문서와 코드가 어긋나는 것 방지)."""
@@ -185,6 +211,26 @@ class TestReadmeMatchesCode(unittest.TestCase):
         data = json.loads((ROOT / "state.json").read_text(encoding="utf-8"))
         self.assertEqual(len(data["quizzes"]), len(get_default_quizzes()))
         self.assertIsNone(QuizGame.check_score_record(data["best_score"], data["best_correct"], data["best_total"]))
+
+    def test_benchmark_numbers_match_raw_output(self):
+        """README 10장 성능 표·감소율과 quiz_game.py 주석이 측정 원본(tools/benchmark_result.txt)과 같은지."""
+        raw = (ROOT / "tools" / "benchmark_result.txt").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        raw_rows = [line for line in raw.splitlines() if line.startswith("| ")]
+        self.assertTrue(raw_rows)
+        for row in raw_rows:
+            self.assertIn(row, readme)
+        big, small, pct = re.search(r"- 10,000개: ([\d.]+) MB → ([\d.]+) MB \((\d+)% 감소\)", raw).groups()
+        self.assertIn(f"{big} MB → {small} MB ({pct}% 감소", readme)
+        code = (ROOT / "quiz_game.py").read_text(encoding="utf-8")
+        self.assertIn(f"약 {pct}% 작아진다(퀴즈 10,000개 기준 {big} MB → {small} MB", code)
+
+    def test_test_count_in_readme(self):
+        """README에 적힌 자동 테스트 개수가 실제 테스트 개수와 같은지."""
+        count = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]).countTestCases()
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(f"자동 테스트 {count}개", readme)
+        self.assertIn(f"({count}개 모두 통과)", readme)
 
 
 class TestMainIntegration(unittest.TestCase):
