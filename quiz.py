@@ -7,6 +7,16 @@ class Quiz:
     CHOICE_COUNT = 4
 
     def __init__(self, question, choices, answer):
+        # 잘못된 퀴즈가 만들어지지 않도록 생성할 때 바로 검사한다. 틀리면 ValueError.
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("문제가 비어 있거나 문자열이 아닙니다.")
+        if (not isinstance(choices, list) or len(choices) != self.CHOICE_COUNT
+                or not all(isinstance(choice, str) and choice.strip() for choice in choices)):
+            raise ValueError("선택지는 비어 있지 않은 문자열 4개여야 합니다.")
+        # bool은 int의 한 종류(True == 1)라서 따로 걸러 낸다.
+        if isinstance(answer, bool) or not isinstance(answer, int) or not 1 <= answer <= self.CHOICE_COUNT:
+            raise ValueError("정답은 1~4 사이의 정수여야 합니다.")
+
         self.question = question
         self.choices = list(choices)
         self.answer = answer  # 정답은 1~4 중 하나의 '번호'로 관리한다.
@@ -35,18 +45,5 @@ class Quiz:
 
     @classmethod
     def from_dict(cls, data):
-        """state.json에서 읽은 dict로 Quiz를 만든다. 형식이 틀리면 ValueError를 낸다."""
-        question = data["question"]
-        choices = data["choices"]
-        answer = data["answer"]
-
-        if not isinstance(question, str) or not question.strip():
-            raise ValueError("문제가 비어 있거나 문자열이 아닙니다.")
-        if (not isinstance(choices, list) or len(choices) != cls.CHOICE_COUNT
-                or not all(isinstance(choice, str) and choice.strip() for choice in choices)):
-            raise ValueError("선택지는 비어 있지 않은 문자열 4개여야 합니다.")
-        # bool은 int의 한 종류(True == 1)라서 따로 걸러 낸다.
-        if isinstance(answer, bool) or not isinstance(answer, int) or not 1 <= answer <= cls.CHOICE_COUNT:
-            raise ValueError("정답은 1~4 사이의 정수여야 합니다.")
-
-        return cls(question, choices, answer)
+        """state.json에서 읽은 dict로 Quiz를 만든다. 키가 없으면 KeyError, 값이 틀리면 ValueError."""
+        return cls(data["question"], data["choices"], data["answer"])
