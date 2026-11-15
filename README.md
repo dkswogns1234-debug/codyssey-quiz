@@ -30,6 +30,9 @@ python --version
 
 # 3) 실행
 python main.py
+
+# 4) 자동 테스트 (선택, 12장 참고)
+python -m unittest discover -s tests -v
 ```
 
 > 별도 설치가 필요 없습니다. `python`이 안 되면 `python3 main.py` 또는 `py main.py`로 실행하세요.
@@ -69,9 +72,13 @@ codyssey-quiz/
 ├── docs/
 │   ├── run_log.txt     # 실제 실행 로그 (추가 → 재시작 → 유지 확인, 손상 복구)
 │   ├── git_log.txt     # git log/reflog 원본 출력 + 커밋별 실행 확인 결과
+│   ├── test_log.txt    # 자동 테스트 실행 원본 출력
 │   └── screenshots/    # 실행 화면 8장 (개발환경, 메뉴, 추가, 목록, 풀기, 점수, git 그래프, clone/pull)
+├── tests/
+│   └── test_quiz_game.py  # unittest 자동 테스트 17개 (단위 + 통합, 12장)
 ├── tools/
-│   └── benchmark.py    # 퀴즈 1,000~100,000개 성능 측정 스크립트 (개발용)
+│   ├── benchmark.py    # 퀴즈 1,000~100,000개 성능 측정 스크립트 (개발용)
+│   └── benchmark_result.txt  # 성능 측정 원본 출력 (README 10장 표의 출처)
 ├── .gitignore
 ├── .gitmessage         # 커밋 메시지 템플릿 (git config commit.template)
 └── README.md
@@ -131,6 +138,19 @@ codyssey-quiz/
 | ![커밋 그래프](docs/screenshots/git_graph.png) | ![clone pull](docs/screenshots/clone_pull.png) |
 | 브랜치 `feature/play-quiz`가 갈라졌다가 `f2b3725`에서 병합 | 새 폴더에 clone → 수정·commit·push → 원래 폴더에서 pull (Fast-forward) |
 
+**스크린샷 촬영 정보** (모두 2026-11-15, Windows 11 / Windows Terminal / Python 3.14.10)
+
+| 파일 | 촬영 시각 | 작업 폴더 | 실행한 것 |
+|---|---|---|---|
+| `clone_pull.png` | 18:01:31 | `Desktop\codyssey-quiz-clone2` → `Desktop\codyssey-quiz` | `git clone`, `git add`, `git commit`, `git push`, `git pull`, `git log` (커밋 `8648c21`, 원래 폴더 reflog `18:01:28 pull: Fast-forward`와 같은 시각대) |
+| `git_graph.png` | 18:01:49 | `Desktop\codyssey-quiz` | `git log --oneline --graph --all` (`8648c21` 기준) |
+| `menu.png` | 18:01:53 | 프로젝트 복사본(원본 `state.json` 보호) | `python main.py` |
+| `score.png` | 18:02:07 | 〃 | `python main.py` |
+| `add_quiz.png` | 18:02:43 | 〃 | `python main.py` |
+| `list.png` | 18:02:47 | 〃 | `python main.py` |
+| `play.png` | 18:02:51 | 〃 | `python main.py` |
+| `dev_env.png` | 18:05:08 | `Desktop\codyssey-quiz` | `python --version`, `git --version`, `git config`, `git remote -v`, `code --version` |
+
 **텍스트 실행 로그**: [`docs/run_log.txt`](docs/run_log.txt) — `state.json`이 없는 새 폴더에서 유지 확인용으로 3번 연속 실행하고, 이어서 파일을 일부러 손상시켜 1번 더 실행한 실제 출력입니다.
 
 | 실행 | 한 일 | 로그에서 확인할 줄 |
@@ -157,6 +177,29 @@ codyssey-quiz/
 | `Chore` | 설정 파일 등 기타 | `Chore: 프로젝트 초기 설정 (.gitignore, README 뼈대)` |
 | `Merge` | 브랜치 병합 | `Merge: feature/play-quiz 브랜치 병합 (퀴즈 풀기 기능)` |
 | `Test` | 측정·검증용 코드 | `Test: 대용량 성능 측정 스크립트 추가` |
+
+**실제 커밋 메시지 예시** (제목 + 빈 줄 + 변경 내용, `git log -1 <해시>`로 확인 가능)
+
+```
+Feat: 퀴즈 추가 기능 구현
+
+- 문제, 선택지 4개, 정답 번호(1~4)를 입력받아 등록
+- 빈 문자열, 숫자 아닌 값, 범위 밖 정답 번호 입력 시 재입력
+```
+
+```
+Fix: 손상 파일 백업 실패 시 원본 보호, 점수별 격려 메시지 추가
+
+- backup_broken_file이 성공 여부를 반환하고, 백업에 실패하면 이번 실행 동안 저장하지 않음
+- 결과 화면에 if/elif/else로 점수 구간별 격려 메시지 출력 (score_comment)
+```
+
+```
+Refactor: QuizGame 메뉴 구조 정리
+
+- 메뉴 이름과 실행 메서드를 MENU 표 하나로 관리 (if/elif 제거)
+- 제목 출력(show_title), 종료(quit) 메서드 분리
+```
 
 **커밋 단위 규칙**
 
@@ -203,7 +246,25 @@ codyssey-quiz/
 ```
 
 - 가운데 갈라졌다 합쳐지는 부분이 **브랜치 생성과 병합**입니다. `feature/play-quiz`에서 커밋 2개(`0cab0b1`, `df73872`)를 만든 뒤 `main`에 병합 커밋 `f2b3725`로 합쳤습니다.
-- `feature/play-quiz` 브랜치도 GitHub에 그대로 올라가 있습니다. (Branches 탭에서 확인 가능)
+- `feature/play-quiz` 브랜치도 GitHub에 그대로 올라가 있습니다.
+
+**GitHub에서 직접 확인하는 링크**
+
+- 커밋 목록: [https://github.com/dkswogns1234-debug/codyssey-quiz/commits/main](https://github.com/dkswogns1234-debug/codyssey-quiz/commits/main)
+- 브랜치 목록: [https://github.com/dkswogns1234-debug/codyssey-quiz/branches](https://github.com/dkswogns1234-debug/codyssey-quiz/branches)
+- 병합 커밋: [https://github.com/dkswogns1234-debug/codyssey-quiz/commit/f2b3725](https://github.com/dkswogns1234-debug/codyssey-quiz/commit/f2b3725)
+- 브랜치 그래프(Network): [https://github.com/dkswogns1234-debug/codyssey-quiz/network](https://github.com/dkswogns1234-debug/codyssey-quiz/network)
+
+**그래프 이미지·텍스트 로그·GitHub에서 같은 커밋 찾기** (`git_graph.png`, 위 텍스트 그래프, `docs/git_log.txt`, GitHub 링크 모두 같은 해시를 씀)
+
+| 해시 | 그래프에서의 위치 | 의미 |
+|---|---|---|
+| `15e3d9d` | 맨 아래 | 첫 커밋 (`git init` 후 초기 설정) |
+| `d60fa9f` | 갈라지기 직전 | 여기서 `git checkout -b feature/play-quiz`로 브랜치 생성 |
+| `0cab0b1`, `df73872` | 오른쪽 갈래(`\| *`) | `feature/play-quiz` 브랜치에서 만든 커밋 2개 |
+| `f2b3725` | 다시 합쳐지는 곳(`*   `, `\|\`) | `git checkout main` 후 `git merge --no-ff feature/play-quiz` 병합 커밋 (부모 2개) |
+| `f11df13` | 위쪽 | 1차 clone 폴더에서 만들어 push → 원래 폴더가 pull한 커밋 |
+| `8648c21` | 맨 위(기준 커밋) | 2차 clone 폴더에서 만들어 push → 원래 폴더가 pull한 커밋 (`clone_pull.png`) |
 
 ### 8-3. 브랜치 생성·병합 기록 (`git reflog`)
 
@@ -296,17 +357,58 @@ flowchart TD
 
 `Quiz`는 화면 출력(`display`)만 빼면 입출력에 의존하지 않아서, 다른 프로그램(예: 웹 퀴즈)에서도 `from_dict`/`to_dict`로 같은 `state.json` 데이터를 그대로 재사용할 수 있습니다.
 
+**재사용 예시** — 콘솔 메뉴(`QuizGame`) 없이 `Quiz`만 가져다 다른 화면(웹 서버, 채팅봇 등)에서 채점하는 코드:
+
+```python
+import json
+from quiz import Quiz
+
+with open("state.json", encoding="utf-8") as f:
+    quizzes = [Quiz.from_dict(item) for item in json.load(f)["quizzes"]]
+
+q = quizzes[0]
+print(q.question, q.choices)        # 웹이라면 이 값을 HTML로 보여 줌
+print(q.is_correct(2))              # 사용자가 고른 번호를 채점 → True
+print(q.answer_text())              # '2번 (float)'
+```
+
+입력 받기(`input_utils`)·저장(`QuizGame.save_state`)과 분리되어 있어서, 화면만 바꾸면 채점·검증 로직은 한 줄도 고치지 않고 쓸 수 있습니다.
+
+**`state.json` 형식이 바뀔 때의 변환(마이그레이션) 절차**
+
+요구 변경으로 저장 형식이 바뀌면(예: 퀴즈에 `hint` 추가, 선택지 5개, 점수 방식 변경) 기존 `state.json`이 새 검사 규칙에 걸려 '손상'으로 처리되므로, 다음 순서로 옮깁니다.
+
+1. 기존 파일을 복사해 둔다: `copy state.json state.v1.json` (macOS/Linux: `cp state.json state.v1.json`)
+2. `tools/` 폴더에 변환 스크립트를 만든다. 예: 모든 퀴즈에 빈 힌트를 추가하는 경우
+   ```python
+   import json
+   with open("state.json", encoding="utf-8") as f:
+       data = json.load(f)
+   for quiz in data["quizzes"]:
+       quiz.setdefault("hint", "")          # 새 필드는 기본값으로 채움
+   data["schema_version"] = 2               # 어떤 형식인지 표시
+   with open("state.json", "w", encoding="utf-8") as f:
+       json.dump(data, f, ensure_ascii=False, indent=2)
+   ```
+3. 코드 쪽(`Quiz.__init__`, `to_dict`, `from_dict`, `load_state`의 검사)을 새 형식에 맞게 고친다.
+4. `python -m unittest discover -s tests -v`로 확인하고, 변환한 파일로 `python main.py`를 실행해 `📂 저장된 데이터를 불러왔습니다`가 나오는지 본다.
+5. 문제가 생기면 1번의 복사본으로 되돌린다.
+
+형식이 여러 번 바뀔 예정이라면 `load_state`에서 `schema_version`을 읽어 버전별 변환 함수를 차례로 적용하는 방식으로 확장합니다(현재 형식은 버전 표시가 없는 1판).
+
 ## 10. 대용량 데이터(1,000개 이상) 성능 분석
 
 측정 스크립트: [`tools/benchmark.py`](tools/benchmark.py) (`python tools/benchmark.py`로 누구나 재현 가능, 실제 `state.json`은 건드리지 않음)
+
+측정 원본 출력: [`tools/benchmark_result.txt`](tools/benchmark_result.txt) — 아래 표는 이 파일의 출력을 그대로 옮긴 것입니다. 다시 측정하면 컴퓨터 상태에 따라 ms 단위 값이 조금씩 달라집니다.
 
 측정 환경: Windows 11, Python 3.14.10([`dev_env.png`](docs/screenshots/dev_env.png)의 `python --version` 출력과 같은 인터프리터), 각 항목 5회 실행 중 가장 빠른 값
 
 | 퀴즈 수 | 파일 크기 | 저장 | 불러오기 | 무작위 10문제 출제 | 목록 출력(화면 표시 제외) | 불러오기 중 최대 메모리 | 불러온 뒤 메모리 |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1,000개 | 0.23 MB | 10 ms | 4 ms | 0.005 ms | 1 ms | 1.1 MB | 0.5 MB |
-| 10,000개 | 2.34 MB | 90 ms | 37 ms | 0.005 ms | 5 ms | 9.6 MB | 5.0 MB |
-| 100,000개 | 23.45 MB | 897 ms | 576 ms | 0.007 ms | 51 ms | 95.1 MB | 49.6 MB |
+| 10,000개 | 2.34 MB | 91 ms | 38 ms | 0.005 ms | 5 ms | 9.6 MB | 5.0 MB |
+| 100,000개 | 23.45 MB | 920 ms | 506 ms | 0.007 ms | 50 ms | 95.1 MB | 49.6 MB |
 
 **측정 범위와 한계**
 
@@ -324,7 +426,7 @@ flowchart TD
 **개선 방안 (규모가 커지면 적용)**
 
 1. 목록을 20개씩 페이지로 나눠 보여주기 (화면 문제 해결)
-2. 저장 시 `indent=2` 대신 들여쓰기 없이 저장 → 10,000개 기준 파일 2.34 MB → 1.60 MB (31% 감소, 직접 측정), 대신 사람이 읽기 어려워짐
+2. 저장 시 들여쓰기 없이 저장 → 10,000개 기준 파일 2.34 MB → 1.60 MB (31% 감소, 직접 측정), 대신 사람이 읽기 어려워짐. `quiz_game.py`의 `JSON_INDENT = 2`를 `None`으로 바꾸면 바로 적용됩니다(읽기 쪽은 수정 불필요).
 3. 퀴즈를 하나 추가할 때마다 전체를 다시 쓰지 않도록 표준 라이브러리 `sqlite3` 데이터베이스로 바꾸기 (수십만 개 이상일 때)
 4. 문제 검색 기능을 넣는다면 단어 → 퀴즈 번호 사전(dict)을 미리 만들어 매번 전체를 훑지 않기
 
@@ -333,8 +435,20 @@ flowchart TD
 ## 11. 예외 상황 정책과 한계
 
 - **백업 정책**: 손상된 파일은 `state.json.bak` **1개만** 보관합니다(다시 손상되면 덮어씀). 백업 자체가 실패하면 원본 보호를 위해 그 실행 동안 저장하지 않습니다.
+  - 여러 세대가 필요하면 `backup_broken_file()`에서 `state.json.bak.2 → .3`, `.bak.1 → .2`, `.bak → .1` 순서로 이름을 한 칸씩 밀고 가장 오래된 것을 지우는 방식(예: 최근 3개 보관)으로 확장합니다. 퀴즈 데이터는 작고, 손상은 드물며, 손상 즉시 사용자에게 알리므로 현재는 1세대로 충분하다고 판단했습니다.
 - **파일을 열 수 없을 때**(권한 문제 등): 손상이 아니므로 백업·초기화하지 않고, 기본 퀴즈로 진행하되 저장하지 않는 **읽기 전용 모드**로 동작합니다. 안내 메시지 `🔒 원본 파일을 보호하기 위해...`가 출력되며, 파일 권한을 고친 뒤 다시 실행하면 원래 데이터로 돌아옵니다.
 - **종료 신호**: `Ctrl+C`(KeyboardInterrupt)와 입력 종료(EOFError)는 처리합니다. 작업 관리자 강제 종료나 리눅스 `kill`(SIGTERM)은 따로 처리하지 않습니다. 다만 저장을 임시 파일 → 교체 방식으로 하므로, 그런 경우에도 `state.json`은 마지막으로 저장된 상태로 남고 깨지지 않습니다.
+  - SIGTERM에서도 저장하고 끝내야 한다면, `main.py`에서 표준 라이브러리 `signal`로 SIGTERM을 Ctrl+C와 같은 경로로 보내면 됩니다. 그러면 기존 `run()`의 `except (KeyboardInterrupt, EOFError)` → `quit()` → `save_state()`가 그대로 동작합니다.
+    ```python
+    import signal
+
+    def on_terminate(signum, frame):
+        raise KeyboardInterrupt          # Ctrl+C와 같은 안전 종료 경로 사용
+
+    signal.signal(signal.SIGTERM, on_terminate)   # main()에서 game.run() 전에 등록
+    ```
+    Windows는 작업 관리자의 '작업 끝내기'가 신호 없이 바로 종료시키므로 이 방법으로도 잡을 수 없고, 이때는 위의 원자적 저장이 파일을 지킵니다.
+- **동시 실행(창 2개에서 같은 폴더의 게임 실행)**: 파일 잠금은 하지 않습니다. 두 프로그램은 시작할 때 각자 `state.json`을 읽고, 저장할 때 자기 메모리의 전체 내용을 씁니다. 그래서 파일이 깨지지는 않지만(원자적 교체), **나중에 저장한 쪽의 내용만 남습니다**(예: A에서 추가한 퀴즈가 B의 종료 저장으로 사라질 수 있음). 1인용 콘솔 게임이라 한 번에 하나만 실행하는 것을 전제로 하며, 동시 실행을 지원하려면 ① 시작 시 `state.lock` 파일을 `open(..., "x")`(이미 있으면 실패)로 만들어 두 번째 실행을 막거나, ② 저장 직전에 파일을 다시 읽어 합치는 방식이 필요합니다.
 - **상황별 조치 방법**
 
 | 상황 | 프로그램이 하는 일 | 사용자가 할 일 |
@@ -343,7 +457,37 @@ flowchart TD
 | `state.json` 손상 (JSON 문법·값 오류) | `state.json.bak`으로 옮기고 기본 퀴즈로 복구 | 이전 내용이 필요하면 `state.json.bak`을 열어 직접 옮겨 적기 |
 | 손상 + 백업 실패 | 원본을 지키려고 이번 실행은 저장 안 함(🔒 안내) | 폴더 쓰기 권한 확인 후 다시 실행 |
 | 점수 갱신 도중 강제 중단 등으로 점수 세 값이 어긋남 | 저장 직전 `check_score_record` 검사에서 걸러 저장하지 않음(⚠️ 안내), 기존 파일 유지 | 다시 실행해 퀴즈를 풀면 정상 기록됨 |
-| 파일을 열 수 없음 (권한) | 읽기 전용 모드(🔒 안내), 원본 그대로 | 파일 속성에서 '읽기 전용' 해제, 다른 프로그램이 파일을 열고 있으면 닫은 뒤 다시 실행 |
+| 파일을 열 수 없음 (권한) | 읽기 전용 모드(🔒 안내), 원본 그대로 | 파일 속성에서 '읽기 전용' 해제, 다른 프로그램이 파일을 열고 있으면 닫은 뒤 다시 실행 (아래 명령 참고) |
 | 저장 실패 (디스크 가득 등) | `⚠️ 데이터를 저장하지 못했습니다` 안내, 기존 파일 유지 | 공간 확보 후 다시 저장되는 동작(추가·종료) 실행 |
 
+- **권한 오류 해결 명령** (프로젝트 폴더에서 실행)
+
+| 운영체제 | 확인 | 해결 |
+|---|---|---|
+| Windows (PowerShell) | `Get-Item state.json \| Select-Object Name, IsReadOnly` | `attrib -R state.json` (읽기 전용 해제), 권한 자체가 없으면 `icacls state.json /grant "$($env:USERNAME):(M)"` |
+| macOS / Linux | `ls -l state.json` | `chmod u+rw state.json`, 소유자가 다르면 `sudo chown $USER state.json` |
+
+  해결한 뒤 `python main.py`를 다시 실행하면 `📂 저장된 데이터를 불러왔습니다`가 나오고 원래 데이터로 돌아옵니다.
+
 - **풀던 중 중단**: 퀴즈를 푸는 도중 `Ctrl+C`를 누르면 그 판 점수는 기록하지 않습니다(끝까지 푼 결과만 최고 점수로 인정).
+
+## 12. 자동 테스트
+
+표준 라이브러리 `unittest`만 사용합니다(설치 불필요). 테스트는 임시 폴더의 `state.json`을 쓰므로 프로젝트의 `state.json`은 바뀌지 않습니다.
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+실행 원본 출력: [`docs/test_log.txt`](docs/test_log.txt) (17개 모두 통과)
+
+| 테스트 묶음 | 확인하는 것 | 관련 요구사항 |
+|---|---|---|
+| `TestQuiz` (3개) | 정상 퀴즈 채점, 잘못된 퀴즈 7종 거부(빈 문제, 선택지 3개, 빈 선택지, 정답 0·5, `True`, 문자열), dict 변환 왕복 | Quiz 클래스 |
+| `TestInputUtils` (2개) | `read_number`: 빈 입력·`abc`·`9`·`0` 재입력 후 ` 3 ` → 3 / `read_text`: 공백만 입력 재입력 | 입력 검증 |
+| `TestScoreRule` (2개) | 점수 기록 규칙의 정상 5종, 모순 4종 | 최고 점수 |
+| `TestStateFile` (6개) | 파일 없음 → 기본 퀴즈, 재시작 후 퀴즈·점수 유지, UTF-8, 손상 4종 백업·복구, 권한 오류 시 원본 보호, 점수 불일치 저장 거부 | 파일 저장·예외 처리 |
+| `TestReadmeMatchesCode` (2개) | README의 '기본 퀴즈 N개'가 모두 실제 개수(8)와 같은지, 저장소 `state.json` 초기값 | 문서-코드 일치 |
+| `TestMainIntegration` (2개) | 실제 `main.py`를 새 프로세스로 실행: 잘못된 입력 → 추가 → 목록 → 풀기 → 점수 → 종료 → 재실행 후 유지, 입력 끝(EOF) 안전 종료 | 전체 흐름 |
+
+테스트가 실제로 오류를 잡는지도 확인했습니다. 코드에 일부러 버그 3개(입력 공백 제거 삭제, 손상 백업 생략, 정답 0 허용)를 넣었을 때 각각 테스트가 실패했습니다.
