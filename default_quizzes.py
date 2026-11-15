@@ -5,6 +5,8 @@
    (값이 잘못되면 Quiz가 만들어질 때 ValueError가 나서 바로 알 수 있다.)
 2. 이미 state.json이 있으면 그 파일이 우선이므로, 새 기본 퀴즈를 보려면 state.json을 지우고 실행한다.
 3. 확인: python -c "from default_quizzes import get_default_quizzes; print(len(get_default_quizzes()))"
+4. 현재 기본 퀴즈는 8개다. 개수를 바꾸면 README의 "기본 퀴즈 8개" 문구도 함께 고친다.
+   tests/test_quiz_game.py의 TestReadmeMatchesCode가 README 숫자와 실제 개수가 같은지 자동으로 확인한다.
 """
 
 from quiz import Quiz

@@ -1,4 +1,17 @@
-"""퀴즈 게임 전체(메뉴, 진행)를 관리하는 QuizGame 클래스."""
+"""퀴즈 게임 전체(메뉴, 진행, 저장)를 관리하는 QuizGame 클래스.
+
+호출 흐름 (입력 → 검증 → 처리 → 저장):
+    main.main()
+      └ QuizGame.run()
+          ├ load_state()            state.json 읽기 (없음 → 기본 퀴즈 / 손상 → 백업 후 복구 / 권한 → 읽기 전용)
+          └ [반복] show_menu()
+                → read_number()     input_utils.py: 1~5 사이 숫자만 통과 (입력 검증)
+                → handle_choice()   번호 → MENU 표의 메서드 실행 (게임 진행)
+                    play_quiz()     → show_result() → update_best_score() → save_state()
+                    add_quiz()      → Quiz(...) 생성 시 값 검사 → save_state()
+                    list_quizzes() / show_best_score()
+          └ 종료(5번, Ctrl+C, EOF) → quit() → save_state()   (데이터 입출력)
+"""
 
 import json
 import os
@@ -14,9 +27,33 @@ LINE = "=" * 40
 # 실행 위치와 상관없이 항상 프로젝트 루트(이 파일이 있는 폴더)의 state.json을 쓴다.
 STATE_FILE = Path(__file__).resolve().parent / "state.json"
 
+# state.json 들여쓰기 칸 수. 2 = 사람이 읽기 쉬움(기본).
+# None으로 바꾸면 한 줄로 저장되어 파일이 약 31% 작아진다(퀴즈 10,000개 기준 2.34 MB → 1.60 MB, README 10장).
+JSON_INDENT = 2
+
 
 class QuizGame:
-    """게임 전체를 관리한다: 퀴즈 목록·최고 점수 보관, 메뉴 표시, 각 기능 실행."""
+    """게임 전체를 관리한다: 퀴즈 목록·최고 점수 보관, 메뉴 표시, 각 기능 실행.
+
+    속성: quizzes(Quiz 목록), best_score / best_correct / best_total(최고 기록), state_file, save_enabled
+    메서드:
+        run()                 프로그램 시작~종료 전체 반복 (Ctrl+C·EOF 처리 포함)
+        show_title()          제목 출력
+        show_menu()           메뉴 번호 출력
+        handle_choice(n)      번호에 맞는 기능 실행, 종료면 False
+        play_quiz()           퀴즈 풀기 (문제 수 선택, 무작위 출제, 채점)
+        show_result()         결과·점수 계산 / score_comment() 점수별 격려 문구
+        update_best_score()   최고 점수와 비교해 갱신하고 저장
+        check_score_record()  점수 세 값이 서로 맞는지 검사 (불러오기·저장 공통 규칙)
+        show_best_score()     최고 점수 출력
+        add_quiz()            새 퀴즈 입력받아 추가하고 저장
+        list_quizzes()        퀴즈 목록 출력
+        load_state()          state.json 불러오기 (없음·손상·권한 처리)
+        save_state()          state.json 저장 (임시 파일 → 교체)
+        backup_broken_file()  손상 파일을 state.json.bak으로 백업
+        reset_to_default()    기본 퀴즈와 빈 점수로 되돌리기
+        quit()                저장 후 종료 인사
+    """
 
     # (메뉴 이름, 실행할 메서드 이름). 마지막 항목은 종료라서 메서드가 없다.
     MENU = [
@@ -161,9 +198,11 @@ class QuizGame:
         }
         temp_file = self.state_file.with_name(self.state_file.name + ".tmp")
         try:
-            # 임시 파일에 다 쓴 뒤 바꿔치기해서, 저장 도중 꺼져도 원래 파일이 깨지지 않게 한다.
+            # 저장 순서(원자적 교체): ① state.json.tmp에 전부 쓴다 → ② os.replace로 state.json과 한 번에 바꾼다.
+            # ①에서 꺼지면 tmp만 불완전하고 state.json은 그대로, ②는 운영체제가 한 번에 처리하므로
+            # 어느 순간에 중단돼도 state.json은 '이전 내용' 아니면 '새 내용' 둘 중 하나다(반쯤 쓴 파일이 생기지 않음).
             with open(temp_file, "w", encoding="utf-8", newline="\n") as file:
-                json.dump(data, file, ensure_ascii=False, indent=2)
+                json.dump(data, file, ensure_ascii=False, indent=JSON_INDENT)
             os.replace(temp_file, self.state_file)
             return True
         except OSError as error:

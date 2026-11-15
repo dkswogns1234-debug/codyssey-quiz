@@ -2,7 +2,16 @@
 
 
 class Quiz:
-    """문제(question), 선택지 4개(choices), 정답 번호(answer, 1~4)를 가진 퀴즈."""
+    """문제(question), 선택지 4개(choices), 정답 번호(answer, 1~4)를 가진 퀴즈.
+
+    메서드:
+        __init__(question, choices, answer)  값을 검사하고 저장 (잘못되면 ValueError)
+        display(number)                      문제와 선택지를 화면에 출력
+        is_correct(user_answer)              고른 번호가 정답이면 True
+        answer_text()                        '2번 (내용)' 형태의 정답 문자열
+        to_dict() / from_dict(data)          state.json 저장용 dict ↔ Quiz 변환
+    화면 출력(display)만 빼면 입출력에 의존하지 않아 다른 프로그램에서도 그대로 재사용할 수 있다.
+    """
 
     CHOICE_COUNT = 4
 
