@@ -208,13 +208,16 @@ class QuizGame:
                 json.dump(data, file, ensure_ascii=False, indent=JSON_INDENT)
             os.replace(temp_file, self.state_file)
             return True
-        except OSError as error:
-            print(f"⚠️ 데이터를 저장하지 못했습니다. ({error})")
+        except (OSError, ValueError) as error:
+            # OSError: 디스크·권한 문제 / ValueError(UnicodeEncodeError 포함): UTF-8로 쓸 수 없는 글자
+            print(f"⚠️ 데이터를 저장하지 못했습니다. ({error}) 기존 state.json은 그대로입니다.")
+            return False
+        finally:
+            # 성공하면 임시 파일은 이미 state.json이 되어 없다. 실패하거나 Ctrl+C로 중단돼 남은 경우에만 지운다.
             try:
-                temp_file.unlink(missing_ok=True)   # 실패하고 남은 임시 파일 정리
+                temp_file.unlink(missing_ok=True)
             except OSError:
                 pass
-            return False
 
     def backup_broken_file(self):
         """손상된 state.json을 state.json.bak으로 옮겨 내용을 보존한다. 성공하면 True를 반환한다."""

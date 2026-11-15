@@ -55,6 +55,7 @@ class TestQuiz(unittest.TestCase):
             ("Q", ["a", "b", "c", "d"], 5),
             ("Q", ["a", "b", "c", "d"], True),       # bool은 정답 번호로 인정하지 않음
             ("Q", ["a", "b", "c", "d"], "2"),        # 문자열 정답
+            ("\ud800", ["a", "b", "c", "d"], 1),     # UTF-8로 저장할 수 없는 깨진 문자
         ]
         for case in bad_cases:
             with self.subTest(case=case), self.assertRaises(ValueError):
@@ -194,6 +195,35 @@ class TestStateFile(unittest.TestCase):
         self.assertTrue(saved)
         self.assertEqual(used, [f"state.json.{os.getpid()}.tmp"])   # 프로세스마다 다른 임시 파일
         self.assertEqual(list(self.folder.glob("*.tmp")), [])          # 저장 후 임시 파일이 남지 않음
+
+    def test_broken_unicode_in_file_is_treated_as_broken(self):
+        # JSON 이스케이프 "\ud800"(짝 없는 서로게이트)은 읽히지만 UTF-8로 저장할 수 없다 → 손상으로 처리
+        self.state.write_text('{"quizzes": [{"question": "\\ud800", "choices": ["a", "b", "c", "d"], "answer": 1}], '
+                              '"best_score": null, "best_correct": 0, "best_total": 0}', encoding="utf-8")
+        game = self.new_game()
+        self.assertEqual(len(game.quizzes), len(get_default_quizzes()))
+        self.assertTrue((self.folder / "state.json.bak").exists())
+        saved, _ = quiet(game.save_state)                   # 복구 뒤에는 정상 저장
+        self.assertTrue(saved)
+
+    def test_unencodable_text_is_not_saved_and_no_crash(self):
+        game = self.new_game()
+        before = self.state.read_bytes()
+        game.quizzes[0].question = "\ud800"                 # 검사를 우회해 메모리에 깨진 글자를 넣은 경우
+        saved, out = quiet(game.save_state)
+        self.assertFalse(saved)
+        self.assertIn("저장하지 못했습니다", out)
+        self.assertEqual(self.state.read_bytes(), before)
+        self.assertEqual(list(self.folder.glob("*.tmp")), [])
+
+    def test_interrupted_save_keeps_original_and_cleans_temp(self):
+        game = self.new_game()
+        before = self.state.read_bytes()
+        with mock.patch.object(quiz_game.json, "dump", side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):     # 저장 도중 Ctrl+C
+                quiet(game.save_state)
+        self.assertEqual(self.state.read_bytes(), before)    # 원본 그대로
+        self.assertEqual(list(self.folder.glob("*.tmp")), [])  # 임시 파일 정리됨
 
 
 class TestReadmeMatchesCode(unittest.TestCase):

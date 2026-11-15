@@ -25,6 +25,12 @@ class Quiz:
         # bool은 int의 한 종류(True == 1)라서 따로 걸러 낸다.
         if isinstance(answer, bool) or not isinstance(answer, int) or not 1 <= answer <= self.CHOICE_COUNT:
             raise ValueError("정답은 1~4 사이의 정수여야 합니다.")
+        # JSON 안의 "\ud800" 같은 깨진 유니코드 문자는 읽을 수는 있어도 UTF-8로 저장할 수 없으므로 미리 거른다.
+        for text in [question, *choices]:
+            try:
+                text.encode("utf-8")
+            except UnicodeEncodeError:
+                raise ValueError("UTF-8로 저장할 수 없는 깨진 문자가 들어 있습니다.") from None
 
         self.question = question
         self.choices = list(choices)
