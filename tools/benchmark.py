@@ -3,7 +3,9 @@
 실행: python tools/benchmark.py
 - 실제 state.json은 건드리지 않고, 임시 폴더에 가짜 퀴즈 N개짜리 파일을 만들어 측정한다.
 - 측정 항목: 파일 크기, 저장(save_state)·불러오기(load_state) 시간, 무작위 출제(random.sample) 시간,
-  목록 출력(list_quizzes) 시간, 불러온 뒤 메모리 사용량(tracemalloc).
+  목록 출력(list_quizzes) 시간, 불러오기 중 최대 메모리와 불러온 뒤 남는 메모리(tracemalloc).
+- 한계: 목록 출력은 문자열을 만드는 시간만 재고 터미널에 그리는 시간은 포함하지 않는다.
+  tracemalloc은 파이썬이 할당한 메모리만 재며, 프로세스 전체 메모리(인터프리터 자체 등)는 포함하지 않는다.
 """
 
 import contextlib
@@ -61,23 +63,24 @@ def measure(count, folder):
     loaded = QuizGame(state_file)
     with contextlib.redirect_stdout(quiet):
         loaded.load_state()
-    memory_mb = tracemalloc.get_traced_memory()[0] / 1024 / 1024
+    current, peak = tracemalloc.get_traced_memory()  # (지금 남은 양, 측정 중 최대치)
+    memory_mb, peak_mb = current / 1024 / 1024, peak / 1024 / 1024
     tracemalloc.stop()
 
     size_mb = state_file.stat().st_size / 1024 / 1024
-    return size_mb, save_ms, load_ms, sample_ms, list_ms, memory_mb
+    return size_mb, save_ms, load_ms, sample_ms, list_ms, memory_mb, peak_mb
 
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     print(f"Python {sys.version.split()[0]}, 각 항목 {REPEAT}회 중 최솟값\n")
-    print("| 퀴즈 수 | 파일 크기 | 저장 | 불러오기 | 무작위 10문제 출제 | 목록 출력 | 불러온 뒤 메모리 |")
-    print("| ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
+    print("| 퀴즈 수 | 파일 크기 | 저장 | 불러오기 | 무작위 10문제 출제 | 목록 출력(화면 표시 제외) | 불러오기 중 최대 메모리 | 불러온 뒤 메모리 |")
+    print("| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
     with tempfile.TemporaryDirectory() as folder:
         for count in SIZES:
-            size_mb, save_ms, load_ms, sample_ms, list_ms, memory_mb = measure(count, folder)
+            size_mb, save_ms, load_ms, sample_ms, list_ms, memory_mb, peak_mb = measure(count, folder)
             print(f"| {count:,}개 | {size_mb:.2f} MB | {save_ms:.0f} ms | {load_ms:.0f} ms "
-                  f"| {sample_ms:.3f} ms | {list_ms:.0f} ms | {memory_mb:.1f} MB |")
+                  f"| {sample_ms:.3f} ms | {list_ms:.0f} ms | {peak_mb:.1f} MB | {memory_mb:.1f} MB |")
 
 
 if __name__ == "__main__":
