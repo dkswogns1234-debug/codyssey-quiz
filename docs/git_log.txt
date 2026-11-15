@@ -1,0 +1,129 @@
+Git 작업 기록 원본 출력 (각 명령의 출력을 편집 없이 그대로 붙임)
+생성 시점 기준. 이후 커밋은 GitHub 커밋 목록에서 확인.
+
+======================================================================
+$ git rev-list --count HEAD
+======================================================================
+21
+
+======================================================================
+$ git log --oneline --graph --all
+======================================================================
+* 378572d Docs: README에 Git 증빙, 커밋 규칙, 설계, 성능 분석 추가
+* 00a38cf Docs: 실제 실행 로그와 기본 퀴즈 변경 방법 추가
+* a103dfa Test: 대용량 성능 측정 스크립트 추가
+* cb8aab1 Fix: 손상 파일 백업 실패 시 원본 보호, 점수별 격려 메시지 추가
+* f11df13 Docs: README에 clone/pull 실습 기록 추가 (복제 저장소에서 작성)
+* c461fdf Docs: README 작성 (개요, 주제 선정 이유, 실행 방법, 기능, 파일 구조, state.json 설명)
+* 3008f28 Fix: 손상 파일 검증과 안전 종료 보강
+* 4dd1fe1 Refactor: Quiz 생성자에서 데이터 검증
+* 4208633 Fix: state.json 줄바꿈을 LF로 통일
+* 5c7d498 Feat: state.json 저장/불러오기 구현
+* 8ebeffb Refactor: QuizGame 메뉴 구조 정리
+* c24a2de Feat: 최고 점수 기록과 점수 확인 기능 구현
+* 59d7f2b Feat: 퀴즈 목록 기능 구현
+* aac3fad Feat: 퀴즈 추가 기능 구현
+*   f2b3725 Merge: feature/play-quiz 브랜치 병합 (퀴즈 풀기 기능)
+|\  
+| * df73872 Feat: 문제 수 선택과 무작위 출제 추가 (보너스)
+| * 0cab0b1 Feat: 퀴즈 풀기 기능 구현
+|/  
+* d60fa9f Feat: 파이썬 상식 기본 퀴즈 8개 추가
+* e741a5b Feat: Quiz 클래스 구현
+* d3b7ec0 Feat: 메뉴 출력과 입력 검증 구현
+* 15e3d9d Chore: 프로젝트 초기 설정 (.gitignore, README 뼈대)
+
+======================================================================
+$ git branch -a
+======================================================================
+  feature/play-quiz
+* main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/feature/play-quiz
+  remotes/origin/main
+
+======================================================================
+$ git reflog --date=iso   (원래 작업 폴더 codyssey-quiz, 전체)
+======================================================================
+378572d HEAD@{2026-11-15 17:45:50 +0900}: commit: Docs: README에 Git 증빙, 커밋 규칙, 설계, 성능 분석 추가
+00a38cf HEAD@{2026-11-15 17:45:50 +0900}: commit: Docs: 실제 실행 로그와 기본 퀴즈 변경 방법 추가
+a103dfa HEAD@{2026-11-15 17:45:50 +0900}: commit: Test: 대용량 성능 측정 스크립트 추가
+cb8aab1 HEAD@{2026-11-15 17:37:14 +0900}: commit: Fix: 손상 파일 백업 실패 시 원본 보호, 점수별 격려 메시지 추가
+f11df13 HEAD@{2026-11-15 17:27:51 +0900}: pull: Fast-forward
+c461fdf HEAD@{2026-11-15 17:27:23 +0900}: commit: Docs: README 작성 (개요, 주제 선정 이유, 실행 방법, 기능, 파일 구조, state.json 설명)
+3008f28 HEAD@{2026-11-15 17:26:03 +0900}: commit: Fix: 손상 파일 검증과 안전 종료 보강
+4dd1fe1 HEAD@{2026-11-15 17:26:03 +0900}: commit: Refactor: Quiz 생성자에서 데이터 검증
+4208633 HEAD@{2026-11-15 17:21:20 +0900}: commit: Fix: state.json 줄바꿈을 LF로 통일
+5c7d498 HEAD@{2026-11-15 17:20:51 +0900}: commit: Feat: state.json 저장/불러오기 구현
+8ebeffb HEAD@{2026-11-15 17:19:49 +0900}: commit: Refactor: QuizGame 메뉴 구조 정리
+c24a2de HEAD@{2026-11-15 17:19:24 +0900}: commit: Feat: 최고 점수 기록과 점수 확인 기능 구현
+59d7f2b HEAD@{2026-11-15 17:18:53 +0900}: commit: Feat: 퀴즈 목록 기능 구현
+aac3fad HEAD@{2026-11-15 17:18:35 +0900}: commit: Feat: 퀴즈 추가 기능 구현
+f2b3725 HEAD@{2026-11-15 17:18:12 +0900}: merge feature/play-quiz: Merge made by the 'ort' strategy.
+d60fa9f HEAD@{2026-11-15 17:18:12 +0900}: checkout: moving from feature/play-quiz to main
+df73872 HEAD@{2026-11-15 17:18:12 +0900}: commit: Feat: 문제 수 선택과 무작위 출제 추가 (보너스)
+0cab0b1 HEAD@{2026-11-15 17:17:57 +0900}: commit: Feat: 퀴즈 풀기 기능 구현
+d60fa9f HEAD@{2026-11-15 17:17:41 +0900}: checkout: moving from main to feature/play-quiz
+d60fa9f HEAD@{2026-11-15 17:17:40 +0900}: commit: Feat: 파이썬 상식 기본 퀴즈 8개 추가
+e741a5b HEAD@{2026-11-15 17:17:25 +0900}: commit: Feat: Quiz 클래스 구현
+d3b7ec0 HEAD@{2026-11-15 17:17:12 +0900}: commit: Feat: 메뉴 출력과 입력 검증 구현
+15e3d9d HEAD@{2026-11-15 17:16:41 +0900}: commit (initial): Chore: 프로젝트 초기 설정 (.gitignore, README 뼈대)
+
+======================================================================
+$ git reflog --date=iso   (clone으로 만든 복제 폴더 codyssey-quiz-clone, 전체)
+======================================================================
+f11df13 HEAD@{2026-11-15 17:27:47 +0900}: commit: Docs: README에 clone/pull 실습 기록 추가 (복제 저장소에서 작성)
+c461fdf HEAD@{2026-11-15 17:27:46 +0900}: clone: from https://github.com/dkswogns1234-debug/codyssey-quiz.git
+
+======================================================================
+$ git remote -v   (복제 폴더)
+======================================================================
+origin	https://github.com/dkswogns1234-debug/codyssey-quiz.git (fetch)
+origin	https://github.com/dkswogns1234-debug/codyssey-quiz.git (push)
+
+======================================================================
+커밋별 실행 확인 (README 8-1의 '실행되는 상태에서만 커밋' 규칙 검증)
+방법: git worktree로 각 커밋을 별도 폴더에 꺼낸 뒤 `printf '5\n' | python main.py` 실행
+======================================================================
+15e3d9d  -    main.py가 아직 없는 초기 설정 커밋
+         Chore: 프로젝트 초기 설정 (.gitignore, README 뼈대)
+d3b7ec0  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 메뉴 출력과 입력 검증 구현
+e741a5b  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: Quiz 클래스 구현
+d60fa9f  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 파이썬 상식 기본 퀴즈 8개 추가
+0cab0b1  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 퀴즈 풀기 기능 구현
+df73872  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 문제 수 선택과 무작위 출제 추가 (보너스)
+f2b3725  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Merge: feature/play-quiz 브랜치 병합 (퀴즈 풀기 기능)
+aac3fad  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 퀴즈 추가 기능 구현
+59d7f2b  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 퀴즈 목록 기능 구현
+c24a2de  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: 최고 점수 기록과 점수 확인 기능 구현
+8ebeffb  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Refactor: QuizGame 메뉴 구조 정리
+5c7d498  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Feat: state.json 저장/불러오기 구현
+4208633  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Fix: state.json 줄바꿈을 LF로 통일
+4dd1fe1  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Refactor: Quiz 생성자에서 데이터 검증
+3008f28  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Fix: 손상 파일 검증과 안전 종료 보강
+c461fdf  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Docs: README 작성 (개요, 주제 선정 이유, 실행 방법, 기능, 파일 구조, state.json 설명)
+f11df13  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Docs: README에 clone/pull 실습 기록 추가 (복제 저장소에서 작성)
+cb8aab1  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Fix: 손상 파일 백업 실패 시 원본 보호, 점수별 격려 메시지 추가
+a103dfa  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Test: 대용량 성능 측정 스크립트 추가
+00a38cf  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Docs: 실제 실행 로그와 기본 퀴즈 변경 방법 추가
+378572d  OK   python main.py 실행 → 메뉴 출력 → 5번 종료 (exit 0, 오류 없음)
+         Docs: README에 Git 증빙, 커밋 규칙, 설계, 성능 분석 추가
