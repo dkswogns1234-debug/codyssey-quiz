@@ -1,5 +1,7 @@
 """퀴즈 게임 전체(메뉴, 진행)를 관리하는 QuizGame 클래스."""
 
+import random
+
 from default_quizzes import get_default_quizzes
 from input_utils import read_number
 
@@ -49,11 +51,13 @@ class QuizGame:
             print("\n📭 등록된 퀴즈가 없습니다. 먼저 '퀴즈 추가'로 퀴즈를 등록하세요.\n")
             return
 
-        total = len(self.quizzes)
+        # 보너스: 풀 문제 수를 고르고, 문제 순서를 무작위로 섞는다.
+        total = read_number(f"\n몇 문제를 풀까요? (1-{len(self.quizzes)}): ", 1, len(self.quizzes))
+        selected = random.sample(self.quizzes, total)
         print(f"\n📝 퀴즈를 시작합니다! (총 {total}문제)\n")
 
         correct = 0
-        for number, quiz in enumerate(self.quizzes, start=1):
+        for number, quiz in enumerate(selected, start=1):
             print("-" * 40)
             quiz.display(number)
             user_answer = read_number("정답 입력: ", 1, quiz.CHOICE_COUNT)
