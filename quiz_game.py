@@ -123,11 +123,14 @@ class QuizGame:
         except (json.JSONDecodeError, UnicodeDecodeError, RecursionError,
                 KeyError, TypeError, ValueError) as error:
             print(f"⚠️ 저장 파일이 손상되어 읽을 수 없습니다. ({error})")
-            self.save_enabled = True
-            self.backup_broken_file()
             self.reset_to_default()
-            print(f"🔧 기본 퀴즈 {len(self.quizzes)}개로 복구했습니다.")
-            self.save_state()
+            if self.backup_broken_file():
+                self.save_enabled = True
+                print(f"🔧 기본 퀴즈 {len(self.quizzes)}개로 복구했습니다.")
+                self.save_state()
+            else:
+                # 백업을 못 했는데 저장하면 원본이 사라지므로, 이번 실행은 저장하지 않는다.
+                print("🔒 원본을 보호하기 위해 이번 실행은 기본 퀴즈로 진행하고 저장하지 않습니다.")
             return
 
         self.save_enabled = True
@@ -160,13 +163,15 @@ class QuizGame:
             return False
 
     def backup_broken_file(self):
-        """손상된 state.json을 state.json.bak으로 옮겨 내용을 보존한다."""
+        """손상된 state.json을 state.json.bak으로 옮겨 내용을 보존한다. 성공하면 True를 반환한다."""
         backup = self.state_file.with_name(self.state_file.name + ".bak")
         try:
             os.replace(self.state_file, backup)
-            print(f"🗂️ 손상된 파일은 {backup.name}(으)로 백업했습니다.")
-        except OSError:
-            pass
+        except OSError as error:
+            print(f"⚠️ 손상된 파일을 백업하지 못했습니다. ({error})")
+            return False
+        print(f"🗂️ 손상된 파일은 {backup.name}(으)로 백업했습니다.")
+        return True
 
     def reset_to_default(self):
         """퀴즈를 기본 데이터로 되돌리고 최고 점수 기록을 지운다."""
@@ -263,5 +268,15 @@ class QuizGame:
         score = round(correct / total * 100)
         print(LINE)
         print(f"🏆 결과: {total}문제 중 {correct}문제 정답! ({score}점)")
+        print(self.score_comment(score))
         print(LINE)
         return score
+
+    def score_comment(self, score):
+        """점수 구간에 따라 다른 격려 메시지를 반환한다."""
+        if score == 100:
+            return "💯 완벽해요! 모든 문제를 맞혔습니다."
+        elif score >= 60:
+            return "👍 잘했어요! 틀린 문제만 다시 보면 완벽해요."
+        else:
+            return "💪 괜찮아요! 다시 도전해 보세요."
