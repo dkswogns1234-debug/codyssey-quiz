@@ -86,13 +86,8 @@ class QuizGame:
 
     def load_state(self):
         """state.json에서 퀴즈와 최고 점수를 불러온다. 없거나 손상됐으면 기본 데이터를 쓴다."""
-        if not self.state_file.exists():
-            self.save_enabled = True
-            self.reset_to_default()
-            print(f"📂 저장된 데이터가 없어 기본 퀴즈 {len(self.quizzes)}개로 시작합니다.")
-            self.save_state()
-            return
-
+        # exists()로 먼저 확인하지 않고 바로 연다. 파일 없음(FileNotFoundError)과
+        # 권한 문제 등 다른 OSError를 아래 except에서 나눠 처리하기 위해서다.
         try:
             with open(self.state_file, "r", encoding="utf-8") as file:
                 data = json.load(file)
@@ -112,13 +107,15 @@ class QuizGame:
             if not all(isinstance(n, int) and not isinstance(n, bool) and n >= 0
                        for n in (best_correct, best_total)):
                 raise ValueError("best_correct, best_total은 0 이상의 정수여야 합니다.")
-            if best_correct > best_total:
-                raise ValueError("맞힌 문제 수(best_correct)가 푼 문제 수(best_total)보다 많습니다.")
-            # 세 값이 서로 맞는지 검사: 안 풀었으면 null/0/0, 풀었으면 점수 = 맞힌 수 / 푼 수 × 100
-            if best is None and (best_correct, best_total) != (0, 0):
-                raise ValueError("최고 점수가 없는데 정답 기록이 남아 있습니다.")
-            if best is not None and (best_total == 0 or best != round(best_correct / best_total * 100)):
-                raise ValueError("최고 점수가 맞힌 수/푼 수와 맞지 않습니다.")
+            problem = self.check_score_record(best, best_correct, best_total)
+            if problem:
+                raise ValueError(problem)
+        except FileNotFoundError:
+            self.reset_to_default()
+            self.save_enabled = True
+            print(f"📂 저장된 데이터가 없어 기본 퀴즈 {len(self.quizzes)}개로 시작합니다.")
+            self.save_state()
+            return
         except OSError as error:
             # 권한 문제 등으로 '읽기'에 실패한 것은 손상이 아니므로 원본 파일을 건드리지 않는다.
             print(f"⚠️ 저장 파일을 열 수 없습니다. ({error})")
@@ -138,17 +135,23 @@ class QuizGame:
                 print("🔒 원본을 보호하기 위해 이번 실행은 기본 퀴즈로 진행하고 저장하지 않습니다.")
             return
 
-        self.save_enabled = True
         self.quizzes = quizzes
         self.best_score = best
         self.best_correct = best_correct
         self.best_total = best_total
+        # 값을 모두 넣은 '뒤에' 저장을 허용한다. 넣는 도중 Ctrl+C가 와도 반쯤 바뀐 상태가 저장되지 않는다.
+        self.save_enabled = True
         best_text = "없음" if best is None else f"{best}점"
         print(f"📂 저장된 데이터를 불러왔습니다. (퀴즈 {len(self.quizzes)}개, 최고점수 {best_text})")
 
     def save_state(self):
         """퀴즈와 최고 점수를 state.json에 UTF-8로 저장한다. 성공하면 True를 반환한다."""
         if not self.save_enabled:
+            return False
+        # 점수 세 값이 서로 맞지 않으면(예: 갱신 도중 Ctrl+C) 잘못된 기록을 쓰지 않고 기존 파일을 유지한다.
+        problem = self.check_score_record(self.best_score, self.best_correct, self.best_total)
+        if problem:
+            print(f"⚠️ 점수 기록이 맞지 않아 저장하지 않았습니다. ({problem}) 기존 state.json은 그대로입니다.")
             return False
         data = {
             "quizzes": [quiz.to_dict() for quiz in self.quizzes],
@@ -209,6 +212,23 @@ class QuizGame:
 
         score = self.show_result(correct, total)
         self.update_best_score(score, correct, total)
+
+    @staticmethod
+    def check_score_record(best, correct, total):
+        """최고 점수 기록 세 값이 서로 맞는지 검사한다. 맞으면 None, 틀리면 이유 문자열을 반환한다.
+
+        규칙: 안 풀었으면 best=None, correct=0, total=0 / 풀었으면 total > 0, correct <= total,
+        best == round(correct / total * 100). 점수 계산 방식을 바꾸면 이 함수와 show_result를 함께 고친다.
+        """
+        if correct > total:
+            return "맞힌 문제 수(best_correct)가 푼 문제 수(best_total)보다 많습니다."
+        if best is None:
+            if (correct, total) != (0, 0):
+                return "최고 점수가 없는데 정답 기록이 남아 있습니다."
+            return None
+        if total == 0 or best != round(correct / total * 100):
+            return "최고 점수가 맞힌 수/푼 수와 맞지 않습니다."
+        return None
 
     def update_best_score(self, score, correct, total):
         """이번 점수가 최고 점수보다 높으면 갱신하고 True를 반환한다.
