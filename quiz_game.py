@@ -28,7 +28,8 @@ LINE = "=" * 40
 STATE_FILE = Path(__file__).resolve().parent / "state.json"
 
 # state.json 들여쓰기 칸 수. 2 = 사람이 읽기 쉬움(기본).
-# None으로 바꾸면 한 줄로 저장되어 파일이 약 31% 작아진다(퀴즈 10,000개 기준 2.34 MB → 1.60 MB, README 10장).
+# None으로 바꾸면 한 줄로 저장되어 파일이 약 28% 작아진다(퀴즈 10,000개 기준 2.34 MB → 1.69 MB,
+# tools/benchmark_result.txt 측정값, README 10장).
 JSON_INDENT = 2
 
 
@@ -196,10 +197,12 @@ class QuizGame:
             "best_correct": self.best_correct,
             "best_total": self.best_total,
         }
-        temp_file = self.state_file.with_name(self.state_file.name + ".tmp")
+        # 임시 파일 이름에 프로세스 번호를 붙인다(예: state.json.12345.tmp).
+        # 게임을 창 두 개에서 동시에 실행해도 서로의 임시 파일을 덮어쓰지 않게 하기 위해서다.
+        temp_file = self.state_file.with_name(f"{self.state_file.name}.{os.getpid()}.tmp")
         try:
-            # 저장 순서(원자적 교체): ① state.json.tmp에 전부 쓴다 → ② os.replace로 state.json과 한 번에 바꾼다.
-            # ①에서 꺼지면 tmp만 불완전하고 state.json은 그대로, ②는 운영체제가 한 번에 처리하므로
+            # 저장 순서(원자적 교체): ① 임시 파일에 전부 쓴다 → ② os.replace로 state.json과 한 번에 바꾼다.
+            # ①에서 꺼지면 임시 파일만 불완전하고 state.json은 그대로, ②는 운영체제가 한 번에 처리하므로
             # 어느 순간에 중단돼도 state.json은 '이전 내용' 아니면 '새 내용' 둘 중 하나다(반쯤 쓴 파일이 생기지 않음).
             with open(temp_file, "w", encoding="utf-8", newline="\n") as file:
                 json.dump(data, file, ensure_ascii=False, indent=JSON_INDENT)
@@ -207,6 +210,10 @@ class QuizGame:
             return True
         except OSError as error:
             print(f"⚠️ 데이터를 저장하지 못했습니다. ({error})")
+            try:
+                temp_file.unlink(missing_ok=True)   # 실패하고 남은 임시 파일 정리
+            except OSError:
+                pass
             return False
 
     def backup_broken_file(self):

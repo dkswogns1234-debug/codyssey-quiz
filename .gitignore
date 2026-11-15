@@ -14,4 +14,6 @@ Thumbs.db
 
 # 손상된 state.json을 복구할 때 남기는 백업 파일
 state.json.bak
+# 저장 중 잠깐 생기는 임시 파일 (state.json.<프로세스번호>.tmp)
+state.json.*.tmp
 state.json.tmp
