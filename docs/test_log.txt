@@ -1,4 +1,4 @@
-$ python -m unittest discover -s tests -v   (Python 3.14.10, 2026-11-15 18:59, Windows 11)
+$ python -m unittest discover -s tests -v   (Python 3.14.10, 2026-11-15 19:04, Windows 11)
 test_read_number_retries_until_valid (test_quiz_game.TestInputUtils.test_read_number_retries_until_valid) ... ok
 test_read_text_rejects_blank (test_quiz_game.TestInputUtils.test_read_text_rejects_blank) ... ok
 test_eof_exits_safely (test_quiz_game.TestMainIntegration.test_eof_exits_safely) ... ok
@@ -15,15 +15,18 @@ README에 적힌 자동 테스트 개수가 실제 테스트 개수와 같은지. ... ok
 test_invalid_records (test_quiz_game.TestScoreRule.test_invalid_records) ... ok
 test_valid_records (test_quiz_game.TestScoreRule.test_valid_records) ... ok
 test_broken_file_is_backed_up_and_reset (test_quiz_game.TestStateFile.test_broken_file_is_backed_up_and_reset) ... ok
+test_broken_unicode_in_file_is_treated_as_broken (test_quiz_game.TestStateFile.test_broken_unicode_in_file_is_treated_as_broken) ... ok
 test_inconsistent_score_is_not_saved (test_quiz_game.TestStateFile.test_inconsistent_score_is_not_saved) ... ok
+test_interrupted_save_keeps_original_and_cleans_temp (test_quiz_game.TestStateFile.test_interrupted_save_keeps_original_and_cleans_temp) ... ok
 test_missing_file_starts_with_defaults_and_creates_file (test_quiz_game.TestStateFile.test_missing_file_starts_with_defaults_and_creates_file) ... ok
 test_permission_error_keeps_original_and_disables_saving (test_quiz_game.TestStateFile.test_permission_error_keeps_original_and_disables_saving) ... ok
 test_recursion_error_is_treated_as_broken (test_quiz_game.TestStateFile.test_recursion_error_is_treated_as_broken) ... ok
 test_save_uses_process_unique_temp_file_and_leaves_none (test_quiz_game.TestStateFile.test_save_uses_process_unique_temp_file_and_leaves_none) ... ok
 test_saved_quiz_and_score_survive_restart (test_quiz_game.TestStateFile.test_saved_quiz_and_score_survive_restart) ... ok
+test_unencodable_text_is_not_saved_and_no_crash (test_quiz_game.TestStateFile.test_unencodable_text_is_not_saved_and_no_crash) ... ok
 test_utf8_without_escaping (test_quiz_game.TestStateFile.test_utf8_without_escaping) ... ok
 
 ----------------------------------------------------------------------
-Ran 21 tests in 0.414s
+Ran 24 tests in 0.447s
 
 OK

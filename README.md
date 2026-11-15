@@ -52,7 +52,7 @@ python -m unittest discover -s tests -v
 - 빈 입력, 숫자가 아닌 값(`abc`), 범위 밖 숫자(메뉴 `9`, 정답 `0`) → 안내 메시지 후 다시 입력
 - 퀴즈가 없을 때, 아직 퀴즈를 풀지 않았을 때 → 안내 메시지
 - `Ctrl+C`(KeyboardInterrupt)나 입력 종료(EOFError) → 안내 후 **저장하고 정상 종료**
-- `state.json`이 없으면 기본 퀴즈 8개로 시작, 손상됐으면(JSON 문법 오류, 자료형·값 오류) `state.json.bak`으로 백업한 뒤 기본 데이터로 복구
+- `state.json`이 없으면 기본 퀴즈 8개로 시작, 손상됐으면(JSON 문법 오류, 자료형·값 오류, UTF-8로 저장할 수 없는 깨진 문자) `state.json.bak`으로 백업한 뒤 기본 데이터로 복구
 - 권한 문제 등으로 파일을 **열 수 없을 때**는 손상이 아니므로, 원본을 지키기 위해 기본 퀴즈로 진행하되 저장하지 않음
 - 퀴즈 추가 시 빈 값, 중복 선택지 입력 방지
 - 최고 점수는 100점 만점 점수로 비교하고, 같은 점수면 더 많은 문제를 푼 기록으로 갱신
@@ -75,7 +75,7 @@ codyssey-quiz/
 │   ├── test_log.txt    # 자동 테스트 실행 원본 출력
 │   └── screenshots/    # 실행 화면 8장 (개발환경, 메뉴, 추가, 목록, 풀기, 점수, git 그래프, clone/pull)
 ├── tests/
-│   └── test_quiz_game.py  # unittest 자동 테스트 21개 (단위 + 통합, 12장)
+│   └── test_quiz_game.py  # unittest 자동 테스트 24개 (단위 + 통합, 12장)
 ├── tools/
 │   ├── benchmark.py    # 퀴즈 1,000~100,000개 성능 측정 스크립트 (개발용)
 │   └── benchmark_result.txt  # 성능 측정 원본 출력 (README 10장 표의 출처)
@@ -92,7 +92,7 @@ codyssey-quiz/
 - **저장 시점**: `state.json`이 없는 상태의 최초 실행, 퀴즈 추가, 최고 점수 갱신, 프로그램 종료(Ctrl+C 포함)
 - **저장소에 포함된 초기 파일**: 저장소에는 기본 퀴즈 8개와 `best_score: null`이 담긴 `state.json`이 들어 있습니다. 그래서 clone 직후 첫 실행은 `📂 저장된 데이터를 불러왔습니다. (퀴즈 8개, 최고점수 없음)`이 나옵니다. `state.json`을 지우고 실행하면 `📂 저장된 데이터가 없어 기본 퀴즈 8개로 시작합니다.`가 나오며 새로 만들어집니다.
 - **값 사이의 규칙**: 아직 안 풀었으면 `best_score=null, best_correct=0, best_total=0`, 풀었으면 `best_total > 0`이고 `best_score = round(best_correct / best_total × 100)`. 어긋나면 손상으로 보고 복구합니다.
-- **저장 방식**: 임시 파일 `state.json.<프로세스번호>.tmp`에 먼저 쓴 뒤 `os.replace`로 바꿔치기 → 저장 도중 꺼져도 기존 파일이 깨지지 않음. 임시 파일 이름에 프로세스 번호를 붙여 동시에 실행한 두 프로그램이 같은 임시 파일을 쓰지 않으며, 저장에 실패하면 남은 임시 파일을 지움
+- **저장 방식**: 임시 파일 `state.json.<프로세스번호>.tmp`에 먼저 쓴 뒤 `os.replace`로 바꿔치기 → 저장 도중 꺼져도 기존 파일이 깨지지 않음. 임시 파일 이름에 프로세스 번호를 붙여 동시에 실행한 두 프로그램이 같은 임시 파일을 쓰지 않으며, 저장이 실패하거나 Ctrl+C로 중단되면 남은 임시 파일을 지움(`finally`)
 - **스키마**
 
 | 키 | 타입 | 설명 |
@@ -454,7 +454,7 @@ print(q.answer_text())              # '2번 (float)'
 | 상황 | 프로그램이 하는 일 | 사용자가 할 일 |
 |---|---|---|
 | `state.json` 없음 | 기본 퀴즈 8개로 새로 만듦 | 없음 |
-| `state.json` 손상 (JSON 문법·값 오류) | `state.json.bak`으로 옮기고 기본 퀴즈로 복구 | 이전 내용이 필요하면 `state.json.bak`을 열어 직접 옮겨 적기 |
+| `state.json` 손상 (JSON 문법·값 오류, 깨진 유니코드 문자) | `state.json.bak`으로 옮기고 기본 퀴즈로 복구 | 이전 내용이 필요하면 `state.json.bak`을 열어 직접 옮겨 적기 |
 | 손상 + 백업 실패 | 원본을 지키려고 이번 실행은 저장 안 함(🔒 안내) | 폴더 쓰기 권한 확인 후 다시 실행 |
 | 점수 갱신 도중 강제 중단 등으로 점수 세 값이 어긋남 | 저장 직전 `check_score_record` 검사에서 걸러 저장하지 않음(⚠️ 안내), 기존 파일 유지 | 다시 실행해 퀴즈를 풀면 정상 기록됨 |
 | 이미 저장된 `state.json`의 점수 세 값이 어긋나 있음 (직접 편집 등) | 불러올 때 같은 `check_score_record` 검사에 걸려 손상으로 처리 → `state.json.bak`으로 백업하고 기본 퀴즈·빈 점수로 복구 | 추가했던 퀴즈가 필요하면 `state.json.bak`에서 `quizzes` 부분을 옮겨 적고, 점수 세 값은 규칙(6장)에 맞게 고친 뒤 다시 실행 |
@@ -480,14 +480,14 @@ print(q.answer_text())              # '2번 (float)'
 python -m unittest discover -s tests -v
 ```
 
-실행 원본 출력: [`docs/test_log.txt`](docs/test_log.txt) (21개 모두 통과)
+실행 원본 출력: [`docs/test_log.txt`](docs/test_log.txt) (24개 모두 통과)
 
 | 테스트 묶음 | 확인하는 것 | 관련 요구사항 |
 |---|---|---|
-| `TestQuiz` (3개) | 정상 퀴즈 채점, 잘못된 퀴즈 7종 거부(빈 문제, 선택지 3개, 빈 선택지, 정답 0·5, `True`, 문자열), dict 변환 왕복 | Quiz 클래스 |
+| `TestQuiz` (3개) | 정상 퀴즈 채점, 잘못된 퀴즈 8종 거부(빈 문제, 선택지 3개, 빈 선택지, 정답 0·5, `True`, 문자열, UTF-8로 저장할 수 없는 깨진 문자), dict 변환 왕복 | Quiz 클래스 |
 | `TestInputUtils` (2개) | `read_number`: 빈 입력·`abc`·`9`·`0` 재입력 후 ` 3 ` → 3 / `read_text`: 공백만 입력 재입력 | 입력 검증 |
 | `TestScoreRule` (2개) | 점수 기록 규칙의 정상 5종, 모순 4종 | 최고 점수 |
-| `TestStateFile` (8개) | 파일 없음 → 기본 퀴즈, 재시작 후 퀴즈·점수 유지, UTF-8, 손상 4종 백업·복구, `RecursionError`도 손상으로 처리, 권한 오류 시 원본 보호, 점수 불일치 저장 거부, 프로세스별 임시 파일 사용·저장 후 임시 파일 없음 | 파일 저장·예외 처리 |
+| `TestStateFile` (11개) | 파일 없음 → 기본 퀴즈, 재시작 후 퀴즈·점수 유지, UTF-8, 손상 4종 백업·복구, `RecursionError`·깨진 유니코드 문자도 손상으로 처리, 권한 오류 시 원본 보호, 점수 불일치 저장 거부, UTF-8로 쓸 수 없는 글자는 저장 거부(멈추지 않음), 저장 도중 Ctrl+C에도 원본 유지·임시 파일 정리, 프로세스별 임시 파일 사용 | 파일 저장·예외 처리 |
 | `TestReadmeMatchesCode` (4개) | README의 '기본 퀴즈 N개'가 모두 실제 개수(8)와 같은지, 저장소 `state.json` 초기값, README 성능 표·감소율과 코드 주석이 측정 원본(`tools/benchmark_result.txt`)과 같은지, README의 테스트 개수가 실제와 같은지 | 문서-코드 일치 |
 | `TestMainIntegration` (2개) | 실제 `main.py`를 새 프로세스로 실행: 잘못된 입력 → 추가 → 목록 → 풀기 → 점수 → 종료 → 재실행 후 유지, 입력 끝(EOF) 안전 종료 | 전체 흐름 |
 
