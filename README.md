@@ -207,6 +207,7 @@ d60fa9f HEAD@{2026-11-15 17:17:41 +0900}: checkout: moving from main to feature/
 2. **복제 폴더에서 수정 → commit → push**: README에 이 실습 문단을 추가하고 `f11df13` 커밋을 push
 3. **원래 폴더에서 pull**: `git pull` → `Fast-forward`, `README.md | 5 +++++`
 4. **확인**: 원래 폴더의 README에 문단이 생겼고, 두 폴더의 최신 커밋이 같은 `f11df13`이 됨
+5. **2차 실습 (스크린샷 증빙)**: 새 폴더 `codyssey-quiz-clone2`에 다시 clone → 이 줄을 추가해 commit·push → 원래 폴더에서 pull. 터미널 화면은 [`docs/screenshots/clone_pull.png`](docs/screenshots/clone_pull.png)
 
 복제 폴더(`codyssey-quiz-clone`)의 실제 `git reflog`:
 
