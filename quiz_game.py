@@ -16,6 +16,9 @@ class QuizGame:
 
     def __init__(self):
         self.quizzes = get_default_quizzes()  # Quiz 인스턴스 목록
+        self.best_score = None   # 최고 점수(100점 만점). 아직 안 풀었으면 None
+        self.best_correct = 0    # 최고 점수를 냈을 때 맞힌 문제 수
+        self.best_total = 0      # 최고 점수를 냈을 때 푼 문제 수
 
     def run(self):
         """프로그램의 메인 반복. 종료를 고를 때까지 메뉴를 계속 보여 준다."""
@@ -47,8 +50,8 @@ class QuizGame:
             self.add_quiz()
         elif choice == 3:
             self.list_quizzes()
-        else:
-            print(f"\n🚧 '{self.MENU_ITEMS[choice - 1]}' 기능은 준비 중입니다.\n")
+        elif choice == 4:
+            self.show_best_score()
 
     def play_quiz(self):
         """저장된 퀴즈를 차례로 출제하고 결과를 보여 준다."""
@@ -72,7 +75,28 @@ class QuizGame:
             else:
                 print(f"❌ 오답입니다. 정답은 {quiz.answer_text()}입니다.\n")
 
-        self.show_result(correct, total)
+        score = self.show_result(correct, total)
+        self.update_best_score(score, correct, total)
+
+    def update_best_score(self, score, correct, total):
+        """이번 점수가 최고 점수보다 높으면 갱신하고 True를 반환한다."""
+        if self.best_score is not None and score <= self.best_score:
+            print(f"(현재 최고 점수: {self.best_score}점)\n")
+            return False
+
+        self.best_score = score
+        self.best_correct = correct
+        self.best_total = total
+        print("🎉 새로운 최고 점수입니다!\n")
+        return True
+
+    def show_best_score(self):
+        """최고 점수를 보여 준다. 아직 퀴즈를 풀지 않았으면 안내한다."""
+        if self.best_score is None:
+            print("\n📭 아직 퀴즈를 푼 기록이 없습니다. 먼저 퀴즈를 풀어 보세요!\n")
+            return
+        print(f"\n🏆 최고 점수: {self.best_score}점 "
+              f"({self.best_total}문제 중 {self.best_correct}문제 정답)\n")
 
     def add_quiz(self):
         """문제, 선택지 4개, 정답 번호를 입력받아 새 퀴즈를 등록한다."""
