@@ -10,9 +10,16 @@ LINE = "=" * 40
 
 
 class QuizGame:
-    """메뉴를 보여 주고 사용자가 고른 기능을 실행한다."""
+    """게임 전체를 관리한다: 퀴즈 목록·최고 점수 보관, 메뉴 표시, 각 기능 실행."""
 
-    MENU_ITEMS = ["퀴즈 풀기", "퀴즈 추가", "퀴즈 목록", "점수 확인", "종료"]
+    # (메뉴 이름, 실행할 메서드 이름). 마지막 항목은 종료라서 메서드가 없다.
+    MENU = [
+        ("퀴즈 풀기", "play_quiz"),
+        ("퀴즈 추가", "add_quiz"),
+        ("퀴즈 목록", "list_quizzes"),
+        ("점수 확인", "show_best_score"),
+        ("종료", None),
+    ]
 
     def __init__(self):
         self.quizzes = get_default_quizzes()  # Quiz 인스턴스 목록
@@ -22,36 +29,40 @@ class QuizGame:
 
     def run(self):
         """프로그램의 메인 반복. 종료를 고를 때까지 메뉴를 계속 보여 준다."""
-        print(LINE)
-        print("🎯 파이썬 상식 퀴즈 게임 🎯")
+        self.show_title()
         try:
             while True:
                 self.show_menu()
-                choice = read_number("선택: ", 1, len(self.MENU_ITEMS))
-                if choice == len(self.MENU_ITEMS):
+                choice = read_number("선택: ", 1, len(self.MENU))
+                if not self.handle_choice(choice):
                     break
-                self.handle_choice(choice)
         except (KeyboardInterrupt, EOFError):
             print("\n\n⚠️ 입력이 중단되어 프로그램을 종료합니다.")
-        print("👋 게임을 종료합니다. 다음에 또 만나요!")
+        self.quit()
+
+    def show_title(self):
+        """프로그램 제목을 출력한다."""
+        print(LINE)
+        print("🎯 파이썬 상식 퀴즈 게임 🎯")
 
     def show_menu(self):
         """메뉴 목록을 번호와 함께 출력한다."""
         print(LINE)
-        for number, item in enumerate(self.MENU_ITEMS, start=1):
-            print(f"{number}. {item}")
+        for number, (label, _) in enumerate(self.MENU, start=1):
+            print(f"{number}. {label}")
         print(LINE)
 
     def handle_choice(self, choice):
-        """선택한 번호에 맞는 기능을 실행한다."""
-        if choice == 1:
-            self.play_quiz()
-        elif choice == 2:
-            self.add_quiz()
-        elif choice == 3:
-            self.list_quizzes()
-        elif choice == 4:
-            self.show_best_score()
+        """선택한 번호의 기능을 실행한다. 종료를 골랐으면 False를 반환한다."""
+        _, method_name = self.MENU[choice - 1]
+        if method_name is None:
+            return False
+        getattr(self, method_name)()
+        return True
+
+    def quit(self):
+        """종료 인사를 출력한다."""
+        print("👋 게임을 종료합니다. 다음에 또 만나요!")
 
     def play_quiz(self):
         """저장된 퀴즈를 차례로 출제하고 결과를 보여 준다."""
