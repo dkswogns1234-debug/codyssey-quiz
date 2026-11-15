@@ -68,7 +68,8 @@ codyssey-quiz/
 ├── state.json          # 저장 데이터 (퀴즈 목록 + 최고 점수)
 ├── docs/
 │   ├── run_log.txt     # 실제 실행 로그 (추가 → 재시작 → 유지 확인, 손상 복구)
-│   └── git_log.txt     # git log/reflog 원본 출력 + 커밋별 실행 확인 결과
+│   ├── git_log.txt     # git log/reflog 원본 출력 + 커밋별 실행 확인 결과
+│   └── screenshots/    # 실행 화면 8장 (개발환경, 메뉴, 추가, 목록, 풀기, 점수, git 그래프, clone/pull)
 ├── tools/
 │   └── benchmark.py    # 퀴즈 1,000~100,000개 성능 측정 스크립트 (개발용)
 ├── .gitignore
@@ -81,7 +82,9 @@ codyssey-quiz/
 - **경로**: 프로젝트 루트의 `state.json` (어느 폴더에서 실행해도 `quiz_game.py`와 같은 폴더의 파일을 사용)
 - **역할**: 프로그램을 종료해도 추가한 퀴즈와 최고 점수가 유지되도록 저장
 - **인코딩**: UTF-8 (한글이 그대로 보이도록 `ensure_ascii=False`)
-- **저장 시점**: 첫 실행, 퀴즈 추가, 최고 점수 갱신, 프로그램 종료(Ctrl+C 포함)
+- **저장 시점**: `state.json`이 없는 상태의 최초 실행, 퀴즈 추가, 최고 점수 갱신, 프로그램 종료(Ctrl+C 포함)
+- **저장소에 포함된 초기 파일**: 저장소에는 기본 퀴즈 8개와 `best_score: null`이 담긴 `state.json`이 들어 있습니다. 그래서 clone 직후 첫 실행은 `📂 저장된 데이터를 불러왔습니다. (퀴즈 8개, 최고점수 없음)`이 나옵니다. `state.json`을 지우고 실행하면 `📂 저장된 데이터가 없어 기본 퀴즈 8개로 시작합니다.`가 나오며 새로 만들어집니다.
+- **값 사이의 규칙**: 아직 안 풀었으면 `best_score=null, best_correct=0, best_total=0`, 풀었으면 `best_total > 0`이고 `best_score = round(best_correct / best_total × 100)`. 어긋나면 손상으로 보고 복구합니다.
 - **저장 방식**: `state.json.tmp`에 먼저 쓴 뒤 `os.replace`로 바꿔치기 → 저장 도중 꺼져도 기존 파일이 깨지지 않음
 - **스키마**
 
@@ -112,19 +115,29 @@ codyssey-quiz/
 
 ## 7. 실행 화면과 실행 로그
 
-| 메뉴 | 퀴즈 풀기 |
-|---|---|
-| ![메뉴](docs/screenshots/menu.png) | ![퀴즈 풀기](docs/screenshots/play.png) |
-| **퀴즈 추가** | **점수 확인** |
-| ![퀴즈 추가](docs/screenshots/add_quiz.png) | ![점수 확인](docs/screenshots/score.png) |
+스크린샷은 모두 `docs/screenshots/`에 있습니다. 실제 `main.py`를 Windows Terminal에서 실행한 화면이며, 게임 화면은 정해 둔 입력을 자동으로 넣어 실행했습니다(입력한 값이 화면에 그대로 보임).
 
-**텍스트 실행 로그**: [`docs/run_log.txt`](docs/run_log.txt) — `state.json`이 없는 새 폴더에서 연속 4번 실행한 실제 출력입니다.
+| 개발 환경 | 메뉴와 잘못된 입력 처리 |
+|---|---|
+| ![개발 환경](docs/screenshots/dev_env.png) | ![메뉴](docs/screenshots/menu.png) |
+| `python --version`, `git --version`, `git config user.name`, 원격 저장소, 커밋 템플릿, VS Code 버전, 프로젝트 파일 | `abc` → 숫자 아님, `9` → 범위 밖, 빈 Enter → 빈 입력 안내 후 다시 입력 |
+| **퀴즈 추가** | **퀴즈 목록** |
+| ![퀴즈 추가](docs/screenshots/add_quiz.png) | ![퀴즈 목록](docs/screenshots/list.png) |
+| 문제·선택지 4개·정답 번호 입력 → `state.json`에 저장 | 추가한 퀴즈가 9번째로 들어감 |
+| **퀴즈 풀기** | **점수 확인** |
+| ![퀴즈 풀기](docs/screenshots/play.png) | ![점수 확인](docs/screenshots/score.png) |
+| 2문제 무작위 출제 → 정답/오답 안내 → 결과·격려 메시지·최고 점수 갱신 | 기록 없음 안내 → 풀기 → 최고 점수 50점(2문제 중 1문제) 표시 |
+| **`git log --oneline --graph --all`** | **clone / push / pull 실습** |
+| ![커밋 그래프](docs/screenshots/git_graph.png) | ![clone pull](docs/screenshots/clone_pull.png) |
+| 브랜치 `feature/play-quiz`가 갈라졌다가 `f2b3725`에서 병합 | 새 폴더에 clone → 수정·commit·push → 원래 폴더에서 pull (Fast-forward) |
+
+**텍스트 실행 로그**: [`docs/run_log.txt`](docs/run_log.txt) — `state.json`이 없는 새 폴더에서 유지 확인용으로 3번 연속 실행하고, 이어서 파일을 일부러 손상시켜 1번 더 실행한 실제 출력입니다.
 
 | 실행 | 한 일 | 로그에서 확인할 줄 |
 |---|---|---|
 | 1 | 첫 실행 → `abc`, `9`, 빈 Enter 입력 → 퀴즈 추가 → 종료 | `📂 저장된 데이터가 없어 기본 퀴즈 8개로 시작합니다.`, `⚠️ 잘못된 입력입니다...`, `✅ 퀴즈가 추가되었습니다! (state.json에 저장됨)` |
 | 2 | 재시작 → 목록 → 1문제 풀기 → 점수 확인 | `📂 저장된 데이터를 불러왔습니다. (퀴즈 9개, ...)`, `[9] 영화 기생충의 감독은?` |
-| 3 | 다시 재시작 → 점수 확인 | `(퀴즈 9개, 최고점수 0점)` → 추가한 퀴즈와 최고 점수가 유지됨 |
+| 3 | 다시 재시작 → 점수 확인 | `(퀴즈 9개, 최고점수 0점)` → 실행 2에서 무작위로 나온 1문제를 틀려 기록된 0점(1문제 중 0문제)이 그대로 유지됨. 0점은 '기록 없음'(`null`)과 다른, 실제로 저장된 값 |
 | 4 | 손상된 `state.json`으로 시작 | `🗂️ 손상된 파일은 state.json.bak(으)로 백업했습니다.`, `🔧 기본 퀴즈 8개로 복구했습니다.` |
 
 ## 8. Git 작업 기록
@@ -148,18 +161,25 @@ codyssey-quiz/
 **커밋 단위 규칙**
 
 1. **기능 하나 = 커밋 하나**: 메뉴 → Quiz 클래스 → 기본 데이터 → 풀기 → 추가 → 목록 → 점수 → 저장 순서로, 기능이 동작하는 것을 확인한 뒤 커밋
-2. **실행되는 상태에서만 커밋**: 커밋마다 `python main.py`가 오류 없이 실행되도록 유지
+2. **실행되는 상태에서만 커밋**: `main.py`를 만든 뒤부터는 커밋마다 `python main.py`가 오류 없이 실행되도록 유지 (첫 초기 설정 커밋은 `.gitignore`와 README만 있음)
 3. **섞지 않기**: 버그 수정(`Fix`)과 새 기능(`Feat`)은 가능한 한 다른 커밋으로 분리
 4. **제목만 보고 알 수 있게**: "수정", "update" 같은 형식적인 메시지 금지
 5. **큰 기능은 브랜치에서**: 퀴즈 풀기처럼 여러 커밋이 필요한 기능은 `feature/기능이름` 브랜치에서 작업 후 `main`에 `--no-ff`로 병합
 
 ### 8-2. 커밋 이력과 브랜치 그래프
 
-GitHub `main` 브랜치 기준 커밋 **18개** (이 README 보완 직전 기준, `git rev-list --count origin/main`), 보완 후 20개 이상. 아래는 실제 `git log --oneline --graph` 출력입니다.
+기준 커밋 **`8648c21`까지 총 25개** (`git rev-list --count 8648c21`). 아래 그래프, [`docs/git_log.txt`](docs/git_log.txt), [`git_graph.png`](docs/screenshots/git_graph.png) 모두 같은 `8648c21` 기준이며, 그 뒤의 커밋(이 README 보완 등)은 GitHub 커밋 목록에서 볼 수 있습니다.
 
-**원본 출력 전체**: [`docs/git_log.txt`](docs/git_log.txt) — `git log --graph --all`, `git branch -a`, 두 폴더의 `git reflog` 전체를 편집 없이 저장했고, **모든 커밋을 하나씩 꺼내 `python main.py`가 오류 없이 실행되는지 확인한 결과**(커밋 규칙 2번 검증)도 들어 있습니다.
+**원본 출력 전체**: [`docs/git_log.txt`](docs/git_log.txt) — `git log --graph --all`, `git branch -a`, 두 폴더의 `git reflog` 전체를 편집 없이 저장했고, **커밋을 하나씩 꺼내 `python main.py`가 오류 없이 실행되는지 확인한 결과**(커밋 규칙 2번 검증)도 들어 있습니다. `main.py`가 생기기 전인 초기 설정 커밋 `15e3d9d`를 제외한 24개 모두 정상 실행됐습니다.
 
 ```
+* 8648c21 Docs: clone/pull 2차 실습 기록 추가 (스크린샷 증빙용)
+* adadbe9 Docs: Git 원본 출력과 커밋별 실행 확인 결과 추가, 성능 표 갱신
+* 60bc866 Chore: 커밋 메시지 템플릿(.gitmessage) 추가
+* 6eb99f5 Test: 성능 측정에 최대 메모리 추가, 측정 범위 명시
+* 378572d Docs: README에 Git 증빙, 커밋 규칙, 설계, 성능 분석 추가
+* 00a38cf Docs: 실제 실행 로그와 기본 퀴즈 변경 방법 추가
+* a103dfa Test: 대용량 성능 측정 스크립트 추가
 * cb8aab1 Fix: 손상 파일 백업 실패 시 원본 보호, 점수별 격려 메시지 추가
 * f11df13 Docs: README에 clone/pull 실습 기록 추가 (복제 저장소에서 작성)
 * c461fdf Docs: README 작성 (개요, 주제 선정 이유, 실행 방법, 기능, 파일 구조, state.json 설명)
@@ -224,11 +244,11 @@ c461fdf HEAD@{2026-11-15 17:27:46 +0900}: clone: from https://github.com/dkswogn
 |---|---|
 | `init` | 프로젝트 폴더 생성 직후 `git init -b main` (8-3의 `commit (initial)`) |
 | `add` | 모든 기능 커밋 전 변경 파일 등록 |
-| `commit` | 기능 단위 커밋 18개 (8-2) |
+| `commit` | `8648c21` 기준 25개: Feat·Fix·Refactor·Docs·Test·Chore 커밋과 병합 커밋 1개 (8-2) |
 | `push` | `main`, `feature/play-quiz` 브랜치를 GitHub에 업로드, 복제 폴더에서 실습 커밋 push |
 | `checkout` | `checkout -b feature/play-quiz`, `checkout main` (8-3) |
-| `clone` | 복제 폴더 생성 (8-4) |
-| `pull` | 원래 폴더에서 실습 커밋 받아오기 (8-3, 8-4) |
+| `clone` | 복제 폴더 2개 생성: `codyssey-quiz-clone`, `codyssey-quiz-clone2` (8-4) |
+| `pull` | 원래 폴더에서 실습 커밋 2번 받아오기: `f11df13`, `8648c21` (8-3, 8-4) |
 
 ## 9. 설계: 역할 분리와 호출 흐름
 
@@ -242,12 +262,34 @@ c461fdf HEAD@{2026-11-15 17:27:46 +0900}: clone: from https://github.com/dkswogn
 
 **호출 흐름 (입력 → 검증 → 처리 → 저장)**: `main()` → `QuizGame.run()` → `load_state()` → [반복] `show_menu()` → `read_number()`로 검증된 번호 받기 → `handle_choice()` → 기능 실행(예: `add_quiz()` → `Quiz(...)` 생성 시 값 검사) → `save_state()` → 종료 시 `quit()` → `save_state()`
 
+**흐름도**
+
+```mermaid
+flowchart TD
+    A["main.py: main()"] --> B["QuizGame.run()"]
+    B --> C["load_state(): state.json 읽기"]
+    C -->|파일 없음| D["기본 퀴즈 8개 → save_state()"]
+    C -->|손상| E["backup_broken_file() → 기본 퀴즈 → save_state()"]
+    C -->|정상| F["show_menu()"]
+    D --> F
+    E --> F
+    F --> G["read_number(): 1~5 검증"]
+    G --> H["handle_choice()"]
+    H -->|1| I["play_quiz() → update_best_score() → save_state()"]
+    H -->|2| J["add_quiz() → Quiz() 값 검사 → save_state()"]
+    H -->|3, 4| K["list_quizzes() / show_best_score()"]
+    I --> F
+    J --> F
+    K --> F
+    H -->|5 또는 Ctrl+C| L["quit() → save_state() → 종료"]
+```
+
 **요구사항이 바뀌면 고칠 곳**
 
 | 바뀌는 요구 | 수정할 곳 |
 |---|---|
 | 점수 계산 방식(가중치, 힌트 감점 등) | `QuizGame.show_result`, `update_best_score` |
-| 선택지 개수 변경(4개 → 5개) | `Quiz.CHOICE_COUNT` (입력·검증이 이 값을 따라감) |
+| 선택지 개수 변경(4개 → 5개) | `Quiz.CHOICE_COUNT` + `default_quizzes.py`의 기본 퀴즈 8개에 선택지 추가 + 기존 `state.json` 변환(또는 삭제) + `quiz.py` 오류 메시지의 '4개', '1~4' 문구. 입력 범위(`read_number`)와 선택지 입력 반복은 상수를 따라가므로 수정 불필요 |
 | 퀴즈에 항목 추가(예: 힌트) | `Quiz.__init__`, `to_dict`, `from_dict`, `QuizGame.add_quiz` |
 | 저장 형식·위치 변경 | `QuizGame.load_state`, `save_state`, `STATE_FILE` |
 | 메뉴 추가 | `QuizGame.MENU`에 (이름, 메서드명) 한 줄 + 메서드 작성 |
@@ -293,4 +335,14 @@ c461fdf HEAD@{2026-11-15 17:27:46 +0900}: clone: from https://github.com/dkswogn
 - **백업 정책**: 손상된 파일은 `state.json.bak` **1개만** 보관합니다(다시 손상되면 덮어씀). 백업 자체가 실패하면 원본 보호를 위해 그 실행 동안 저장하지 않습니다.
 - **파일을 열 수 없을 때**(권한 문제 등): 손상이 아니므로 백업·초기화하지 않고, 기본 퀴즈로 진행하되 저장하지 않는 **읽기 전용 모드**로 동작합니다. 안내 메시지 `🔒 원본 파일을 보호하기 위해...`가 출력되며, 파일 권한을 고친 뒤 다시 실행하면 원래 데이터로 돌아옵니다.
 - **종료 신호**: `Ctrl+C`(KeyboardInterrupt)와 입력 종료(EOFError)는 처리합니다. 작업 관리자 강제 종료나 리눅스 `kill`(SIGTERM)은 따로 처리하지 않습니다. 다만 저장을 임시 파일 → 교체 방식으로 하므로, 그런 경우에도 `state.json`은 마지막으로 저장된 상태로 남고 깨지지 않습니다.
+- **상황별 조치 방법**
+
+| 상황 | 프로그램이 하는 일 | 사용자가 할 일 |
+|---|---|---|
+| `state.json` 없음 | 기본 퀴즈 8개로 새로 만듦 | 없음 |
+| `state.json` 손상 (JSON 문법·값 오류) | `state.json.bak`으로 옮기고 기본 퀴즈로 복구 | 이전 내용이 필요하면 `state.json.bak`을 열어 직접 옮겨 적기 |
+| 손상 + 백업 실패 | 원본을 지키려고 이번 실행은 저장 안 함(🔒 안내) | 폴더 쓰기 권한 확인 후 다시 실행 |
+| 파일을 열 수 없음 (권한) | 읽기 전용 모드(🔒 안내), 원본 그대로 | 파일 속성에서 '읽기 전용' 해제, 다른 프로그램이 파일을 열고 있으면 닫은 뒤 다시 실행 |
+| 저장 실패 (디스크 가득 등) | `⚠️ 데이터를 저장하지 못했습니다` 안내, 기존 파일 유지 | 공간 확보 후 다시 저장되는 동작(추가·종료) 실행 |
+
 - **풀던 중 중단**: 퀴즈를 푸는 도중 `Ctrl+C`를 누르면 그 판 점수는 기록하지 않습니다(끝까지 푼 결과만 최고 점수로 인정).
