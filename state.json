@@ -1,0 +1,87 @@
+{
+  "quizzes": [
+    {
+      "question": "파이썬에서 print(type(3.0))을 실행하면 나오는 자료형은?",
+      "choices": [
+        "int",
+        "float",
+        "str",
+        "bool"
+      ],
+      "answer": 2
+    },
+    {
+      "question": "numbers = [10, 20, 30] 에서 20을 꺼내는 코드는?",
+      "choices": [
+        "numbers[0]",
+        "numbers[1]",
+        "numbers[2]",
+        "numbers[-1]"
+      ],
+      "answer": 2
+    },
+    {
+      "question": "다음 중 한 번 만들면 내용을 바꿀 수 없는(immutable) 자료형은?",
+      "choices": [
+        "list",
+        "dict",
+        "set",
+        "tuple"
+      ],
+      "answer": 4
+    },
+    {
+      "question": "반복 횟수가 정해져 있지 않고 '조건이 참인 동안' 반복할 때 주로 쓰는 문은?",
+      "choices": [
+        "for",
+        "while",
+        "if",
+        "def"
+      ],
+      "answer": 2
+    },
+    {
+      "question": "클래스로 객체를 만들 때 자동으로 실행되는 메서드는?",
+      "choices": [
+        "__str__",
+        "__init__",
+        "__call__",
+        "__del__"
+      ],
+      "answer": 2
+    },
+    {
+      "question": "print(7 // 2)의 실행 결과는?",
+      "choices": [
+        "3.5",
+        "3",
+        "4",
+        "1"
+      ],
+      "answer": 2
+    },
+    {
+      "question": "원격 저장소를 내 컴퓨터로 통째로 복제하는 Git 명령어는?",
+      "choices": [
+        "git pull",
+        "git push",
+        "git clone",
+        "git init"
+      ],
+      "answer": 3
+    },
+    {
+      "question": "JSON 파일을 읽어서 파이썬 객체(dict, list 등)로 바꾸는 함수는?",
+      "choices": [
+        "json.dump",
+        "json.dumps",
+        "json.load",
+        "json.save"
+      ],
+      "answer": 3
+    }
+  ],
+  "best_score": null,
+  "best_correct": 0,
+  "best_total": 0
+}

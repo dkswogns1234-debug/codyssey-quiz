@@ -14,3 +14,4 @@ Thumbs.db
 
 # 손상된 state.json을 복구할 때 남기는 백업 파일
 state.json.bak
+state.json.tmp

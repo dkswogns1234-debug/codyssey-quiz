@@ -28,3 +28,25 @@ class Quiz:
     def answer_text(self):
         """정답 번호와 내용을 '3번 (내용)' 형태의 문자열로 반환한다."""
         return f"{self.answer}번 ({self.choices[self.answer - 1]})"
+
+    def to_dict(self):
+        """JSON으로 저장할 수 있도록 dict로 바꿔 반환한다."""
+        return {"question": self.question, "choices": self.choices, "answer": self.answer}
+
+    @classmethod
+    def from_dict(cls, data):
+        """state.json에서 읽은 dict로 Quiz를 만든다. 형식이 틀리면 ValueError를 낸다."""
+        question = data["question"]
+        choices = data["choices"]
+        answer = data["answer"]
+
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("문제가 비어 있거나 문자열이 아닙니다.")
+        if (not isinstance(choices, list) or len(choices) != cls.CHOICE_COUNT
+                or not all(isinstance(choice, str) and choice.strip() for choice in choices)):
+            raise ValueError("선택지는 비어 있지 않은 문자열 4개여야 합니다.")
+        # bool은 int의 한 종류(True == 1)라서 따로 걸러 낸다.
+        if isinstance(answer, bool) or not isinstance(answer, int) or not 1 <= answer <= cls.CHOICE_COUNT:
+            raise ValueError("정답은 1~4 사이의 정수여야 합니다.")
+
+        return cls(question, choices, answer)
